@@ -1,9 +1,0 @@
-fastapi==0.111.0
-uvicorn==0.29.0
-psycopg2-binary==2.9.9
-requests==2.31.0
-yfinance==0.2.40
-pandas==2.2.2
-numpy==1.26.4
-python-dateutil==2.9.0
-apscheduler==3.10.4
