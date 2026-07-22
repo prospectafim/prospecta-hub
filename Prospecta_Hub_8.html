@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospecta FIM — Hub de Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a;--white:#ffffff;
+  --g50:#f8f8f8;--g100:#f0f0f0;--g200:#e0e0e0;--g300:#c8c8c8;
+  --g400:#9a9a9a;--g600:#5a5a5a;--g800:#2a2a2a;
+  --green:#15803d;--green-bg:#dcfce7;
+  --red:#9b1c1c;--red-bg:#fee2e2;
+  --amber:#854d0e;--amber-bg:#fef9c3;
+  --blue:#1e40af;--blue-bg:#dbeafe;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --body:'Lora',Georgia,serif;
+  --sidebar:240px;
+}
+html,body{height:100%}
+body{font-family:var(--body);background:var(--g50);color:var(--black)}
+#app-root{display:flex}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--black);height:100vh;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+.sb-brand{padding:24px 20px 18px;border-bottom:1px solid #1f1f1f}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.bull-icon{width:34px;height:34px;flex-shrink:0}
+.brand-name{font-family:var(--serif);font-size:12px;font-weight:700;color:var(--white);line-height:1.3}
+.brand-sub{font-size:9px;color:var(--g400);letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
+.sb-section{padding:16px 0 2px}
+.sb-label{font-size:9px;font-weight:600;color:var(--g600);letter-spacing:.12em;text-transform:uppercase;padding:0 20px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--g400);font-size:12px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;user-select:none;font-family:var(--body)}
+.nav-item:hover{color:var(--white);background:#141414}
+.nav-item.active{color:var(--white);border-left-color:var(--white);background:#141414}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--white);color:var(--black);font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px}
+.sb-footer{margin-top:auto;padding:14px 20px;border-top:1px solid #1f1f1f}
+.user-row{display:flex;align-items:center;gap:8px}
+.user-av{width:28px;height:28px;border-radius:50%;background:var(--white);color:var(--black);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:10px;font-weight:700;flex-shrink:0}
+.user-name{font-size:11px;color:var(--white);font-weight:500}
+.user-role{font-size:10px;color:var(--g400)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--white);border-bottom:1px solid var(--g200);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--black)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-size:11px;color:var(--g400)}
+.content{flex:1;overflow-y:auto;padding:24px;background:var(--g50)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-family:var(--body);font-size:12px;cursor:pointer;border:none;transition:all .15s;font-weight:500}
+.btn-primary{background:var(--black);color:var(--white)}
+.btn-primary:hover{background:var(--g800)}
+.btn-secondary{background:var(--white);color:var(--black);border:1px solid var(--g200)}
+.btn-secondary:hover{background:var(--g50)}
+.btn svg{width:13px;height:13px}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.kpi-card{background:var(--white);border:1px solid var(--g200);border-radius:8px;padding:16px 18px}
+.kpi-label{font-size:10px;color:var(--g400);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--black);line-height:1}
+.kpi-val.pos{color:var(--green)}.kpi-val.neg{color:var(--red)}
+.kpi-sub{font-size:10px;color:var(--g400);margin-top:3px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--g200);border-radius:8px;padding:18px 22px;margin-bottom:14px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-family:var(--serif);font-size:13px;font-weight:700;color:var(--black)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:7px 10px;font-size:10px;font-weight:600;color:var(--g400);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--g200)}
+tbody td{padding:10px 10px;color:var(--black);border-bottom:1px solid var(--g100);font-family:var(--body);font-size:12px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--g50)}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:500}
+.pill-black{background:var(--black);color:var(--white)}
+.pill-white{background:var(--white);color:var(--black);border:1px solid var(--g200)}
+.pill-green{background:var(--green-bg);color:var(--green)}
+.pill-red{background:var(--red-bg);color:var(--red)}
+.pill-amber{background:var(--amber-bg);color:var(--amber)}
+.pill-blue{background:var(--blue-bg);color:var(--blue)}
+
+/* PROGRESS */
+.prog{height:4px;background:var(--g100);border-radius:2px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;background:var(--black);border-radius:2px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--g200);margin:14px 0}
+
+/* SEC TITLE */
+.sec-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--black);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+
+/* AGENDA */
+.agenda-item{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--g100)}
+.agenda-item:last-child{border-bottom:none}
+.agenda-num{width:20px;height:20px;border:1px solid var(--g200);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--serif);font-weight:700;color:var(--g600);flex-shrink:0;margin-top:1px}
+.agenda-text strong{font-family:var(--serif);font-size:12px;display:block;margin-bottom:1px}
+.agenda-text span{font-size:11px;color:var(--g400)}
+
+/* REUNIAO CARD */
+.reuniao-card{background:var(--white);border:1px solid var(--g200);border-radius:6px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.reuniao-card:hover{border-color:var(--black)}
+.reuniao-data{font-size:10px;color:var(--g400);margin-bottom:3px}
+.reuniao-titulo{font-family:var(--serif);font-size:12px;font-weight:700}
+.reuniao-preview{font-size:11px;color:var(--g600);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* TESE CARD */
+.tese-card{background:var(--white);border:1px solid var(--g200);border-radius:8px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+.tese-card:hover{border-color:var(--black)}
+.tese-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.tese-ativo{font-family:var(--serif);font-size:14px;font-weight:700}
+.tese-autor{font-size:11px;color:var(--g400);margin-top:1px}
+.tese-texto{font-size:12px;color:var(--g600);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tese-stop{font-size:11px;color:var(--g400);margin-top:8px;padding-top:8px;border-top:1px solid var(--g100)}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid var(--g200)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer;font-family:var(--serif);font-size:13px;font-weight:700;gap:10px}
+.faq-q:hover{color:var(--g600)}
+.faq-chevron{transition:transform .2s;color:var(--g400);flex-shrink:0;font-size:16px}
+.faq-a{font-size:12px;color:var(--g600);line-height:1.8;padding-bottom:14px;display:none}
+.faq-a.open{display:block}
+.faq-a ol,.faq-a ul{padding-left:16px;margin-top:4px}
+.faq-a li{margin-bottom:3px}
+.faq-a strong{color:var(--black);font-family:var(--serif)}
+.faq-a code{background:var(--g100);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:11px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:10px;padding:26px 30px;width:min(520px,92vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-family:var(--serif);font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--g400);font-size:22px;line-height:1;padding:0}
+.modal-close:hover{color:var(--black)}
+.form-label{display:block;font-size:10px;font-weight:600;color:var(--g600);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;margin-top:12px}
+.form-label:first-of-type{margin-top:0}
+input[type=text],input[type=date],input[type=number],textarea,select{width:100%;padding:8px 11px;border:1px solid var(--g200);border-radius:6px;font-family:var(--body);font-size:12px;color:var(--black);background:var(--white);outline:none;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--black)}
+textarea{resize:vertical;min-height:72px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.detail-section{margin-bottom:14px}
+.detail-label{font-size:10px;font-weight:600;color:var(--g400);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.detail-val{font-size:12px;color:var(--black);line-height:1.7}
+
+/* DERIV */
+.deriv-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--g100)}
+.deriv-row:last-child{border-bottom:none}
+.deriv-name{font-family:var(--serif);font-size:12px;font-weight:700}
+.deriv-meta{font-size:11px;color:var(--g400);margin-top:1px}
+.deriv-right{display:flex;align-items:center;gap:8px}
+.deriv-notional{font-family:var(--serif);font-size:15px;font-weight:700}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--g400)}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.35}
+.empty p{font-size:12px;line-height:1.6}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-day-name{text-align:center;font-size:10px;font-weight:600;color:var(--g400);padding:4px 0;letter-spacing:.06em;text-transform:uppercase}
+.cal-cell{min-height:72px;padding:6px;border:1px solid var(--g100);border-radius:4px;background:var(--white);vertical-align:top;font-size:10px;cursor:default}
+.cal-cell.other-month{background:var(--g50);opacity:.5}
+.cal-cell.today{border-color:var(--black);background:#f8f8f8}
+.cal-cell.has-event{border-color:var(--g300)}
+.cal-date{font-family:var(--serif);font-size:11px;font-weight:700;margin-bottom:3px;color:var(--black)}
+.cal-cell.today .cal-date{background:var(--black);color:var(--white);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px}
+.cal-event{font-size:9px;padding:2px 4px;border-radius:3px;margin-bottom:2px;line-height:1.3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ev-us{background:#dbeafe;color:#1e3a8a}
+.ev-br{background:#dcfce7;color:#14532d}
+.ev-eu{background:#f3e8ff;color:#581c87}
+.ev-jp{background:#fef9c3;color:#713f12}
+.ev-fund{background:#f1f5f9;color:#334155;border:1px solid var(--g200)}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-month-title{font-family:var(--serif);font-size:14px;font-weight:700}
+.cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--g600)}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* SCORECARD */
+.score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.score-card{background:var(--white);border:1px solid var(--g200);border-radius:8px;padding:16px 20px}
+.score-title{font-size:10px;color:var(--g400);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.score-val{font-family:var(--serif);font-size:24px;font-weight:700}
+.score-sub{font-size:11px;color:var(--g400);margin-top:3px}
+.semaforo{display:flex;align-items:center;gap:8px;margin-top:8px}
+.sem-dot{width:12px;height:12px;border-radius:50%}
+.sem-label{font-size:11px;font-weight:600}
+.perf-bar-wrap{margin-top:6px}
+.perf-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px}
+.perf-bar-label{min-width:60px;color:var(--g600)}
+.perf-bar{flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden}
+.perf-bar-fill{height:100%;border-radius:3px}
+
+/* SIMULADOR */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sim-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sim-label{font-size:12px;min-width:160px;font-family:var(--body)}
+.sim-input{width:80px;padding:5px 8px;border:1px solid var(--g200);border-radius:5px;font-family:var(--body);font-size:12px;text-align:right}
+.sim-input:focus{border-color:var(--black);outline:none}
+.sim-total{font-family:var(--serif);font-size:14px;font-weight:700;padding:10px 0;border-top:1px solid var(--g200);margin-top:6px;display:flex;justify-content:space-between}
+.sim-total.ok{color:var(--green)}.sim-total.err{color:var(--red)}
+.alert-box{padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:8px}
+.alert-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #fde68a}
+.alert-err{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+.alert-ok{background:var(--green-bg);color:var(--green);border:1px solid #86efac}
+
+/* TRAINEE */
+.trainee-card{background:var(--white);border:1px solid var(--g200);border-radius:8px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.trainee-card:hover{border-color:var(--black)}
+.trainee-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.trainee-name{font-family:var(--serif);font-size:13px;font-weight:700}
+.trainee-meta{font-size:11px;color:var(--g400)}
+.nota-bars{display:flex;gap:4px;align-items:flex-end;height:24px}
+.nota-bar{width:18px;border-radius:2px 2px 0 0;min-height:4px}
+.nota-media{font-family:var(--serif);font-size:18px;font-weight:700;margin-left:auto}
+
+/* CARTA */
+.carta-section{margin-bottom:16px}
+.carta-preview{background:var(--g50);border:1px solid var(--g200);border-radius:6px;padding:16px;font-size:12px;line-height:1.8;white-space:pre-wrap;font-family:var(--body);color:var(--g800)}
+
+/* ONBOARDING */
+.ob-step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--g100)}
+.ob-step:last-child{border-bottom:none}
+.ob-num{width:32px;height:32px;border:1.5px solid var(--black);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:12px;font-weight:700;flex-shrink:0}
+.ob-content strong{font-family:var(--serif);font-size:13px;display:block;margin-bottom:4px}
+.ob-content p{font-size:12px;color:var(--g600);line-height:1.7}
+.ob-content ul{font-size:12px;color:var(--g600);padding-left:16px;margin-top:4px;line-height:1.8}
+.org-chart{display:flex;flex-direction:column;align-items:center;gap:0}
+.org-node{background:var(--black);color:var(--white);padding:8px 20px;border-radius:6px;font-family:var(--serif);font-size:12px;font-weight:700;text-align:center;margin-bottom:0}
+.org-node.secondary{background:var(--white);color:var(--black);border:1.5px solid var(--black)}
+.org-node.tertiary{background:var(--g50);color:var(--black);border:1px solid var(--g300)}
+.org-line{width:1px;height:20px;background:var(--g300);margin:0 auto}
+.org-row{display:flex;gap:12px;justify-content:center;margin-bottom:0}
+.org-branch{display:flex;flex-direction:column;align-items:center}
+.ob-editable{border:1px dashed var(--g300);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--g600);font-family:var(--body);line-height:1.7;min-height:60px;outline:none;margin-top:6px;white-space:pre-wrap}
+.ob-editable:focus{border-color:var(--black);color:var(--black)}
+.ob-editable-hint{font-size:10px;color:var(--g400);margin-top:3px;font-style:italic}
+
+/* PENDING */
+.pending-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100)}
+.pending-item:last-child{border-bottom:none}
+.pending-check{width:16px;height:16px;border:1.5px solid var(--g300);border-radius:3px;flex-shrink:0;cursor:pointer;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pending-check.done{background:var(--black);border-color:var(--black)}
+.pending-check.done::after{content:"✓";color:var(--white);font-size:10px}
+.pending-text{font-size:12px;line-height:1.5}
+.pending-text.done{text-decoration:line-through;color:var(--g400)}
+.pending-meta{font-size:10px;color:var(--g400);margin-top:2px}
+
+@media(max-width:768px){
+  .sidebar{width:50px;min-width:50px}
+  .brand-name,.brand-sub,.sb-label,.nav-item span,.nav-badge,.user-info{display:none}
+  .nav-item{padding:11px;justify-content:center}
+  .grid-2,.grid-3,.sim-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════════════ -->
+<!-- CREDENCIAIS: altere as duas linhas abaixo antes de publicar       -->
+<script>
+const LOGIN_USER = "Prospecta.fim";
+const LOGIN_PASS = "2026@prospecta";
+
+function tentarLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  if(u===LOGIN_USER && p===LOGIN_PASS){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-root').style.display='flex';
+    try{localStorage.setItem('pf_auth','1');}catch(e){}
+  } else {
+    const err=document.getElementById('l-err');
+    err.style.display='block';
+    document.getElementById('l-pass').value='';
+    document.getElementById('l-pass').focus();
+    setTimeout(()=>err.style.display='none',3000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  try{
+    if(localStorage.getItem('pf_auth')==='1'){
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app-root').style.display='flex';
+    }
+  }catch(e){}
+  document.getElementById('l-pass').addEventListener('keydown',function(e){
+    if(e.key==='Enter') tentarLogin();
+  });
+  document.getElementById('l-user').addEventListener('keydown',function(e){
+    if(e.key==='Enter') document.getElementById('l-pass').focus();
+  });
+});
+</script>
+
+<!-- Tela de login -->
+<div id="login-screen" style="position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Lora',Georgia,serif">
+  <div style="width:340px;padding:40px 36px;background:#fff;border-radius:12px">
+    <!-- Logo / touro -->
+    <div style="text-align:center;margin-bottom:28px">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="display:block;margin:0 auto 10px">
+        <path d="M10 8 C8 6,5 8,6 12 C7 15,10 14,11 16" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M38 8 C40 6,43 8,42 12 C41 15,38 14,37 16" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M11 16 C14 12,18 13,24 14 C30 13,34 12,37 16" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M14 18 C13 22,13 27,15 31 C16 33,18 34,19 36 C20 38,20 41,20 41" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M34 18 C35 22,35 27,33 31 C32 33,30 34,29 36 C28 38,28 41,28 41" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="24" cy="20" rx="10" ry="7" stroke="#0a0a0a" stroke-width="1.5" fill="none"/>
+        <circle cx="20" cy="19" r="1.5" fill="#0a0a0a"/>
+        <circle cx="28" cy="19" r="1.5" fill="#0a0a0a"/>
+        <path d="M21 23 C22 24.5,26 24.5,27 23" stroke="#0a0a0a" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <path d="M20 41 L18 46 M20 41 L22 46 M28 41 L26 46 M28 41 L30 46" stroke="#0a0a0a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:15px;font-weight:700;color:#0a0a0a;line-height:1.3">Prospecta FIM</div>
+      <div style="font-size:10px;color:#9a9a9a;letter-spacing:.1em;text-transform:uppercase;margin-top:4px">Núcleo de Finanças · Insper</div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;color:#5a5a5a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Usuário</div>
+      <input id="l-user" type="text" autocomplete="username" placeholder="usuário"
+        style="width:100%;padding:9px 12px;border:1px solid #e0e0e0;border-radius:6px;font-family:'Lora',Georgia,serif;font-size:13px;color:#0a0a0a;outline:none;transition:border-color .15s"
+        onfocus="this.style.borderColor='#0a0a0a'" onblur="this.style.borderColor='#e0e0e0'">
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-size:10px;font-weight:600;color:#5a5a5a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Senha</div>
+      <input id="l-pass" type="password" autocomplete="current-password" placeholder="senha"
+        style="width:100%;padding:9px 12px;border:1px solid #e0e0e0;border-radius:6px;font-family:'Lora',Georgia,serif;font-size:13px;color:#0a0a0a;outline:none;transition:border-color .15s"
+        onfocus="this.style.borderColor='#0a0a0a'" onblur="this.style.borderColor='#e0e0e0'">
+    </div>
+
+    <div id="l-err" style="display:none;background:#fee2e2;color:#9b1c1c;border:1px solid #fca5a5;padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;text-align:center">
+      Usuário ou senha incorretos.
+    </div>
+
+    <button onclick="tentarLogin()"
+      style="width:100%;padding:10px;background:#0a0a0a;color:#fff;border:none;border-radius:6px;font-family:'Lora',Georgia,serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s"
+      onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='#0a0a0a'">
+      Entrar
+    </button>
+
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:#c8c8c8">
+      Acesso restrito à equipe Prospecta FIM
+    </div>
+  </div>
+</div>
+
+<!-- App (oculto até login) -->
+<div id="app-root" style="display:none;width:100%;height:100vh">
+
+
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <svg class="bull-icon" viewBox="0 0 48 48" fill="none">
+        <path d="M10 8 C8 6,5 8,6 12 C7 15,10 14,11 16" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M38 8 C40 6,43 8,42 12 C41 15,38 14,37 16" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M11 16 C14 12,18 13,24 14 C30 13,34 12,37 16" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M14 18 C13 22,13 27,15 31 C16 33,18 34,19 36 C20 38,20 41,20 41" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M34 18 C35 22,35 27,33 31 C32 33,30 34,29 36 C28 38,28 41,28 41" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="24" cy="20" rx="10" ry="7" stroke="white" stroke-width="1.5" fill="none"/>
+        <circle cx="20" cy="19" r="1.5" fill="white"/>
+        <circle cx="28" cy="19" r="1.5" fill="white"/>
+        <path d="M21 23 C22 24.5,26 24.5,27 23" stroke="white" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <path d="M20 41 L18 46 M20 41 L22 46 M28 41 L26 46 M28 41 L30 46" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-name">Prospecta FIM</div>
+    </div>
+    <div class="brand-sub">Núcleo de Finanças · Insper</div>
+  </div>
+  <nav>
+    <div class="sb-section">
+      <div class="sb-label">Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></div>
+      <div class="nav-item" onclick="showPage('carteira',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Carteira</span></div>
+      <div class="nav-item" onclick="showPage('performance',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Performance</span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Gestão</div>
+      <div class="nav-item" onclick="showPage('comite',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Comitê</span><span class="nav-badge" id="badge-comite">0</span></div>
+      <div class="nav-item" onclick="showPage('teses',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Teses</span><span class="nav-badge" id="badge-teses">0</span></div>
+      <div class="nav-item" onclick="showPage('carta',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Carta do Gestor</span></div>
+      <div class="nav-item" onclick="showPage('simulador',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg><span>Simulador</span></div>
+      <div class="nav-item" onclick="showPage('calendario',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendário Macro</span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Equipe</div>
+      <div class="nav-item" onclick="showPage('trainees',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg><span>Trainees</span><span class="nav-badge" id="badge-trainees">0</span></div>
+      <div class="nav-item" onclick="showPage('onboarding',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Onboarding</span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Sistema</div>
+      <div class="nav-item" onclick="showPage('scorecard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Scorecard</span></div>
+      <div class="nav-item" onclick="showPage('faq',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>FAQ / Manual</span></div>
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="user-av">D</div>
+      <div>
+        <div class="user-name">Davi</div>
+        <div class="user-role">Head of Asset</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="page-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbar-date"></span>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('comite',null);setTimeout(()=>openModal('modal-reuniao'),100)">+ Nova ata</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('teses',null);setTimeout(()=>openModal('modal-tese'),100)">+ Nova tese</button>
+    </div>
+  </header>
+  <main class="content" id="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Cota atual</div><div class="kpi-val">1,135355</div><div class="kpi-sub">base 1,0 em abr/25</div></div>
+        <div class="kpi-card"><div class="kpi-label">Retorno mês</div><div class="kpi-val neg">−0,65%</div><div class="kpi-sub">mai/26</div></div>
+        <div class="kpi-card"><div class="kpi-label">Retorno acumulado</div><div class="kpi-val pos">+13,54%</div><div class="kpi-sub">desde abr/25</div></div>
+        <div class="kpi-card"><div class="kpi-label">PL estimado</div><div class="kpi-val">R$ 11,35M</div><div class="kpi-sub">mai/26</div></div>
+        <div class="kpi-card"><div class="kpi-label">Vol anualizada</div><div class="kpi-val">7,60%</div><div class="kpi-sub">histórica</div></div>
+        <div class="kpi-card"><div class="kpi-label">Máx drawdown</div><div class="kpi-val neg">−6,86%</div><div class="kpi-sub">jan–mar/26</div></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Decisões pendentes</div><button class="btn btn-secondary btn-sm" onclick="openModal('modal-pending')">+ Adicionar</button></div>
+          <div id="pending-list"><div class="empty" style="padding:16px"><p>Nenhuma decisão pendente.</p></div></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Derivativos ativos</div></div>
+          <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">8,0%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">SMAL11</div><div class="deriv-meta">Entrada 29/05/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">2,5%</div></div></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Posições ativas</div><button class="btn btn-secondary btn-sm" onclick="showPage('carteira',null)">Ver tudo</button></div>
+          <table><thead><tr><th>Ativo</th><th>Tipo</th><th>Peso</th></tr></thead><tbody>
+            <tr><td style="font-family:var(--serif);font-weight:700">LFT 2031</td><td><span class="pill pill-white">Tesouro</span></td><td>24,0%</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">NTN-B 2029</td><td><span class="pill pill-white">Tesouro</span></td><td>19,5%</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">NTN-B 2035</td><td><span class="pill pill-white">Tesouro</span></td><td>14,5%</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">STIP</td><td><span class="pill pill-white">ETF USD</span></td><td>7,0%</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">IAU</td><td><span class="pill pill-white">ETF USD</span></td><td>5,0%</td></tr>
+            <tr><td colspan="3" style="text-align:center;font-size:11px;color:var(--g400);cursor:pointer" onclick="showPage('carteira',null)">+ 12 ativos — ver carteira completa →</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Agenda do comitê</div></div>
+          <div class="agenda-item"><div class="agenda-num">1</div><div class="agenda-text"><strong>Panorama macro</strong><span>EUA, Brasil, Zona do Euro, China</span></div></div>
+          <div class="agenda-item"><div class="agenda-num">2</div><div class="agenda-text"><strong>Agenda dos BCs</strong><span>Fed, BCB, BCE, BoE</span></div></div>
+          <div class="agenda-item"><div class="agenda-num">3</div><div class="agenda-text"><strong>Revisão de posições</strong><span>Performance, stops, aumentos</span></div></div>
+          <div class="agenda-item"><div class="agenda-num">4</div><div class="agenda-text"><strong>Novas teses</strong><span>PMs e analistas</span></div></div>
+          <div class="agenda-item"><div class="agenda-num">5</div><div class="agenda-text"><strong>Decisões</strong><span>Rebalances, stops, próximos passos</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARTEIRA -->
+    <div id="page-carteira" class="page">
+      <div class="sec-title">Carteira atual — mai/26<span style="font-family:var(--body);font-size:11px;color:var(--g400);font-weight:400">Rebalance: 29/05/2026</span></div>
+      <div class="card"><div class="card-hdr"><div class="card-title">Posições (100% do PL)</div></div>
+        <table><thead><tr><th>Ativo</th><th>Tipo</th><th>Bloomberg</th><th style="min-width:130px">Peso</th><th>Status</th></tr></thead>
+        <tbody id="tbody-carteira"></tbody></table>
+      </div>
+      <div class="card"><div class="card-hdr"><div class="card-title">Derivativos — exposição nocional</div></div>
+        <table><thead><tr><th>Instrumento</th><th>Direção</th><th>Notional</th><th>Entrada</th><th>Bloomberg</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:var(--serif);font-weight:700">EUR/BRL</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">8,0%</td><td>24/04/2026</td><td style="color:var(--g400)">EUR BRL Curncy</td></tr>
+          <tr><td style="font-family:var(--serif);font-weight:700">MXN/CAD</td><td><span class="pill pill-green">Comprado</span></td><td style="font-family:var(--serif);font-weight:700">3,0%</td><td>27/04/2026</td><td style="color:var(--g400)">MXN CAD Curncy</td></tr>
+          <tr><td style="font-family:var(--serif);font-weight:700">SMAL11</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">2,5%</td><td>29/05/2026</td><td style="color:var(--g400)">SMAL11 BZ Equity</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div id="page-performance" class="page">
+      <div class="sec-title">Performance do fundo</div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Retorno acumulado — Prospecta FIM vs CDI</div></div>
+        <canvas id="chart-retorno" height="90"></canvas>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Drawdown histórico</div></div>
+          <canvas id="chart-dd" height="120"></canvas>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Retornos mensais</div></div>
+          <canvas id="chart-mensal" height="120"></canvas>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-hdr"><div class="card-title">Métricas de risco</div></div>
+        <div class="grid-3" style="gap:10px">
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Sharpe</div><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--red)">−0,31</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">VaR 95% (1d)</div><div style="font-family:var(--serif);font-size:22px;font-weight:700">−0,73%</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Alpha acum.</div><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--red)">−2,52%</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Sortino</div><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--red)">−0,37</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Vol anual.</div><div style="font-family:var(--serif);font-size:22px;font-weight:700">7,60%</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">CDI acum.</div><div style="font-family:var(--serif);font-size:22px;font-weight:700">16,06%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMITE -->
+    <div id="page-comite" class="page">
+      <div class="sec-title">Comitê semanal<button class="btn btn-primary btn-sm" onclick="openModal('modal-reuniao')">+ Nova ata</button></div>
+      <div class="grid-2">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--g400);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Histórico</div>
+          <div id="lista-reunioes"><div class="empty"><div class="empty-icon">📋</div><p>Nenhuma ata registrada ainda.</p></div></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--g400);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Pauta padrão</div>
+          <div class="card">
+            <div class="agenda-item"><div class="agenda-num">1</div><div class="agenda-text"><strong>Panorama macro</strong><span>EUA, Brasil, Zona do Euro, China</span></div></div>
+            <div class="agenda-item"><div class="agenda-num">2</div><div class="agenda-text"><strong>Agenda dos BCs</strong><span>Fed, BCB, BCE, BoE — decisões e impactos</span></div></div>
+            <div class="agenda-item"><div class="agenda-num">3</div><div class="agenda-text"><strong>Revisão de posições</strong><span>Performance, stops, aumentos</span></div></div>
+            <div class="agenda-item"><div class="agenda-num">4</div><div class="agenda-text"><strong>Novas teses</strong><span>Apresentação pelos PMs e analistas</span></div></div>
+            <div class="agenda-item"><div class="agenda-num">5</div><div class="agenda-text"><strong>Decisões</strong><span>Rebalances, stops, próximos passos</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TESES -->
+    <div id="page-teses" class="page">
+      <div class="sec-title">Teses de investimento<button class="btn btn-primary btn-sm" onclick="openModal('modal-tese')">+ Nova tese</button></div>
+      <div id="filtros-tese" style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="btn btn-primary btn-sm" onclick="filtrarTeses('todas',this)">Todas</button>
+        <button class="btn btn-secondary btn-sm" onclick="filtrarTeses('ativa',this)">Ativas</button>
+        <button class="btn btn-secondary btn-sm" onclick="filtrarTeses('revisao',this)">Em revisão</button>
+        <button class="btn btn-secondary btn-sm" onclick="filtrarTeses('encerrada',this)">Encerradas</button>
+      </div>
+      <div id="lista-teses"><div class="empty"><div class="empty-icon">💡</div><p>Nenhuma tese registrada ainda.</p></div></div>
+    </div>
+
+    <!-- CARTA DO GESTOR -->
+    <div id="page-carta" class="page">
+      <div class="sec-title">Carta do Gestor
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="limparCarta()">Limpar</button>
+          <button class="btn btn-primary btn-sm" onclick="gerarCarta()">Gerar rascunho</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hdr"><div class="card-title">Estrutura da carta — baseada na carta de junho/26</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill pill-black">1. Disclaimer</span>
+          <span class="pill pill-white">2. Cenário Interno</span>
+          <span class="pill pill-white">3. Política Monetária e Fiscal</span>
+          <span class="pill pill-white">4. Câmbio e Mercados</span>
+          <span class="pill pill-white">5. Cenário Externo — EUA</span>
+          <span class="pill pill-white">6. Cenário Externo — Resto</span>
+          <span class="pill pill-white">7. Visão para o Futuro</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">Cabeçalho</div></div>
+            <label class="form-label">Mês de referência</label>
+            <input type="text" id="carta-mes" placeholder="Ex: Julho de 2026">
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">1. Cenário Interno</div></div>
+            <label class="form-label">Atividade econômica e mercado de trabalho</label>
+            <textarea id="carta-atividade" style="min-height:90px" placeholder="IBC-Br, PIB, PNAD, Caged, PMI, produção industrial, varejo..."></textarea>
+            <label class="form-label">Inflação</label>
+            <textarea id="carta-inflacao" style="min-height:90px" placeholder="IPCA-15, IPCA oficial, Focus, expectativas, serviços subjacentes..."></textarea>
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">2. Política Monetária e Fiscal</div></div>
+            <label class="form-label">Copom e Selic</label>
+            <textarea id="carta-copom" style="min-height:80px" placeholder="Decisão do Copom, tom, curva de juros DI..."></textarea>
+            <label class="form-label">Fiscal</label>
+            <textarea id="carta-fiscal" style="min-height:80px" placeholder="Resultado primário, dívida/PIB, despesas vs receitas..."></textarea>
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">3. Câmbio e Mercados</div></div>
+            <textarea id="carta-cambio" style="min-height:90px" placeholder="USD/BRL, Ibovespa, Small Caps, fluxo estrangeiro, balança comercial..."></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">4. Cenário Externo — EUA</div></div>
+            <label class="form-label">Atividade e mercado de trabalho</label>
+            <textarea id="carta-eua-ativ" style="min-height:80px" placeholder="PIB, Payroll, desemprego, participação da força de trabalho..."></textarea>
+            <label class="form-label">Inflação</label>
+            <textarea id="carta-eua-inf" style="min-height:70px" placeholder="CPI, PCE, núcleo, projeções do Fed..."></textarea>
+            <label class="form-label">Política monetária (Fed / FOMC)</label>
+            <textarea id="carta-fed" style="min-height:80px" placeholder="Decisão do FOMC, dot plot, tom, yields, DXY..."></textarea>
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">5. Cenário Externo — Europa e Japão</div></div>
+            <label class="form-label">Reino Unido & Alemanha (BoE / BCE)</label>
+            <textarea id="carta-europa" style="min-height:80px" placeholder="PMIs, CPI, decisão BoE e BCE, posicionamento em Gilts e Bunds..."></textarea>
+            <label class="form-label">Japão (BoJ)</label>
+            <textarea id="carta-japao" style="min-height:80px" placeholder="Decisão BoJ, IPC, USD/JPY, intervenção cambial, carry trade..."></textarea>
+          </div>
+
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">6. Visão para o Futuro</div></div>
+            <label class="form-label">Posicionamento do fundo e convicções</label>
+            <textarea id="carta-visao" style="min-height:110px" placeholder="Como as análises acima se traduzem em posições? NTN-Bs, ETFs de commodities, câmbio, renda variável..."></textarea>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;margin-bottom:14px" onclick="gerarCarta()">Gerar rascunho completo</button>
+
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">Rascunho</div><button class="btn btn-secondary btn-sm" onclick="copiarCarta()">Copiar</button></div>
+            <div class="carta-preview" id="carta-preview">Preencha os campos ao lado e clique em "Gerar rascunho" para visualizar a carta.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULADOR -->
+    <div id="page-simulador" class="page">
+      <div class="sec-title">Simulador de rebalance</div>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-hdr"><div class="card-title">Novos pesos propostos</div><button class="btn btn-secondary btn-sm" onclick="resetSim()">Resetar</button></div>
+            <div id="sim-inputs"></div>
+            <div class="sim-total" id="sim-total"><span>Total</span><span id="sim-total-val">0,0%</span></div>
+            <div id="sim-alertas"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-hdr"><div class="card-title">Comparação por classe</div></div>
+            <canvas id="chart-sim" height="180"></canvas>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">Mudanças vs carteira atual</div></div>
+            <div id="sim-diff"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDÁRIO MACRO -->
+    <div id="page-calendario" class="page">
+      <div class="cal-nav">
+        <button class="btn btn-secondary btn-sm" onclick="calNav(-1)">← Anterior</button>
+        <div class="cal-month-title" id="cal-title"></div>
+        <button class="btn btn-secondary btn-sm" onclick="calNav(1)">Próximo →</button>
+      </div>
+      <div class="cal-legend">
+        <div class="leg-item"><div class="leg-dot ev-us"></div>EUA</div>
+        <div class="leg-item"><div class="leg-dot ev-br"></div>Brasil</div>
+        <div class="leg-item"><div class="leg-dot ev-eu"></div>Zona do Euro</div>
+        <div class="leg-item"><div class="leg-dot ev-jp"></div>Japão</div>
+        <div class="leg-item"><div class="leg-dot ev-fund"></div>Fundo</div>
+        <div class="leg-item" style="margin-left:auto"><a href="https://investing.com/economic-calendar" target="_blank" style="font-size:11px;color:var(--g400);text-decoration:none">Ver calendário completo → Investing.com</a></div>
+      </div>
+      <div class="cal-header">
+        <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div><div class="cal-day-name">Ter</div>
+        <div class="cal-day-name">Qua</div><div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div><div class="cal-day-name">Sáb</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- SCORECARD -->
+    <div id="page-scorecard" class="page">
+      <div class="sec-title">Scorecard do fundo</div>
+      <div class="score-grid">
+        <div class="score-card"><div class="score-title">Meses positivos</div><div class="score-val pos">11</div><div class="score-sub">de 13 meses</div></div>
+        <div class="score-card"><div class="score-title">% acima do CDI</div><div class="score-val">61,5%</div><div class="score-sub">8 de 13 meses</div></div>
+        <div class="score-card"><div class="score-title">Melhor mês</div><div class="score-val pos">+3,80%</div><div class="score-sub">Janeiro 2026</div></div>
+        <div class="score-card"><div class="score-title">Pior mês</div><div class="score-val neg">−4,75%</div><div class="score-sub">Março 2026</div></div>
+        <div class="score-card"><div class="score-title">Retorno anualizado</div><div class="score-val">12,53%</div><div class="score-sub">vs CDI 14,85%</div></div>
+        <div class="score-card">
+          <div class="score-title">Saúde do fundo</div>
+          <div class="semaforo" style="margin-top:8px">
+            <div class="sem-dot" style="background:#f59e0b"></div>
+            <div class="sem-label" style="color:#92400e;font-size:13px">Atenção</div>
+          </div>
+          <div class="score-sub" style="margin-top:4px">Drawdown em aberto (−6,86%)</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Performance por período</div></div>
+          <div class="perf-bar-wrap">
+            <div class="perf-bar-row"><span class="perf-bar-label">1 mês</span><div class="perf-bar"><div class="perf-bar-fill" style="width:0%;background:var(--red)"></div></div><span style="min-width:50px;text-align:right;color:var(--red)">−0,65%</span></div>
+            <div class="perf-bar-row"><span class="perf-bar-label">3 meses</span><div class="perf-bar"><div class="perf-bar-fill" style="width:25%;background:var(--red)"></div></div><span style="min-width:50px;text-align:right;color:var(--red)">−2,74%</span></div>
+            <div class="perf-bar-row"><span class="perf-bar-label">6 meses</span><div class="perf-bar"><div class="perf-bar-fill" style="width:55%;background:var(--black)"></div></div><span style="min-width:50px;text-align:right">+5,82%</span></div>
+            <div class="perf-bar-row"><span class="perf-bar-label">12 meses</span><div class="perf-bar"><div class="perf-bar-fill" style="width:80%;background:var(--black)"></div></div><span style="min-width:50px;text-align:right">+13,54%</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><div class="card-title">Consistência mensal</div></div>
+          <canvas id="chart-score" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINEES -->
+    <div id="page-trainees" class="page">
+      <div class="sec-title">Controle de trainees<button class="btn btn-primary btn-sm" onclick="openModal('modal-trainee')">+ Novo trainee</button></div>
+      <div id="lista-trainees"><div class="empty"><div class="empty-icon">🎓</div><p>Nenhum trainee cadastrado ainda.</p></div></div>
+    </div>
+
+    <!-- ONBOARDING -->
+    <div id="page-onboarding" class="page">
+      <div class="sec-title">Manual do membro — Prospecta FIM</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hdr"><div class="card-title">Organograma</div></div>
+        <div class="org-chart" style="padding:10px 0">
+          <div class="org-node">Head of Asset Management — Davi</div>
+          <div class="org-line"></div>
+          <div class="org-row">
+            <div class="org-branch"><div class="org-node secondary">PM RF — Ishimura</div></div>
+            <div class="org-branch"><div class="org-node secondary">PM Equities — Bruno</div></div>
+            <div class="org-branch"><div class="org-node secondary">PM Comm. & FX — Henrique</div></div>
+          </div>
+          <div class="org-line"></div>
+          <div class="org-row">
+            <div class="org-node tertiary" style="padding:6px 14px;font-size:11px">4–5 Analistas</div>
+          </div>
+          <div class="org-line"></div>
+          <div class="org-row">
+            <div class="org-node tertiary" style="padding:6px 14px;font-size:11px;background:var(--g50)">12 Trainees (processo seletivo)</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Como funciona o fundo</div></div>
+        <div class="ob-step">
+          <div class="ob-num">1</div>
+          <div class="ob-content">
+            <strong>Estrutura do fundo</strong>
+            <p>O Prospecta FIM é um fundo multimercado simulado do Núcleo de Finanças Insper. Iniciou em abril de 2025 com PL de R$ 10 milhões e cota base de 1,0. O benchmark é o CDI. Não há taxa de administração, taxa de performance ou come-cotas — é um ambiente acadêmico de gestão real.</p>
+            <div contenteditable="true" class="ob-editable" data-placeholder="Adicione informações sobre a estrutura...">O fundo opera com rebalances periódicos decididos em comitê e registrados formalmente. Todos os dados são mantidos em Python e Excel.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-num">2</div>
+          <div class="ob-content">
+            <strong>Processo de decisão de investimento</strong>
+            <p>Toda decisão segue um fluxo formal: o PM ou analista elabora uma tese, apresenta no comitê semanal com fundamentos macro e técnicos, o comitê delibera e aprova ou rejeita. A tese aprovada é registrada no hub e vira posição no próximo rebalance.</p>
+            <ul>
+              <li>Teses são apresentadas com: ativo, peso sugerido, catalisador, risco e stop</li>
+              <li>Aprovação exige maioria do comitê (Head + PMs)</li>
+              <li>Toda decisão é registrada em ata</li>
+            </ul>
+            <div contenteditable="true" class="ob-editable">Adicione detalhes específicos do processo de vocês aqui.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-num">3</div>
+          <div class="ob-content">
+            <strong>Papéis e responsabilidades</strong>
+            <ul>
+              <li><strong>Head of Asset:</strong> decisões finais, stops de emergência, aprovação de posições, geração da lâmina mensal</li>
+              <li><strong>PMs (3):</strong> cada um é responsável por uma área (Renda Fixa, Renda Variável, Internacional). Propõem teses, acompanham posições da sua área e apresentam no comitê</li>
+              <li><strong>Analistas:</strong> suporte às teses dos PMs, análise quantitativa, modelos e dados</li>
+              <li><strong>Trainees:</strong> durante o processo não participam das decisões. Ao serem aprovados, entram como analistas</li>
+            </ul>
+            <div contenteditable="true" class="ob-editable">Adicione regras específicas de cada cargo aqui.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-num">4</div>
+          <div class="ob-content">
+            <strong>Rotina semanal e mensal</strong>
+            <ul>
+              <li><strong>Toda semana:</strong> comitê com pauta fixa (macro, BCs, posições, teses, decisões)</li>
+              <li><strong>Toda semana:</strong> atualização de preços via Bloomberg e cálculo de cota</li>
+              <li><strong>Todo mês:</strong> geração da lâmina com métricas atualizadas e carta do gestor</li>
+              <li><strong>A cada rebalance:</strong> nova carteira registrada no hub e no script Python</li>
+            </ul>
+            <div contenteditable="true" class="ob-editable">Adicione detalhes da rotina da equipe aqui.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+        <div class="ob-step">
+          <div class="ob-num">5</div>
+          <div class="ob-content">
+            <strong>Ferramentas e arquivos</strong>
+            <ul>
+              <li><strong>Prospecta_Hub.html</strong> — este sistema, aberto no browser</li>
+              <li><strong>prospecta_batimento.py</strong> — gera a lâmina Excel completa</li>
+              <li><strong>atualiza_prospecta.py</strong> — script interativo de atualização de cotas</li>
+              <li><strong>Template_Bloomberg.xlsx</strong> — planilha para coletar preços no Bloomberg</li>
+              <li><strong>Claude (chat do projeto)</strong> — para registrar rebalances, gerar lâminas e atualizar o hub</li>
+            </ul>
+            <div contenteditable="true" class="ob-editable">Adicione outros arquivos ou sistemas que a equipe usa.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+        <div class="ob-step" style="border-bottom:none">
+          <div class="ob-num">6</div>
+          <div class="ob-content">
+            <strong>Como se tornar gestor</strong>
+            <p>O caminho natural dentro do Prospecta é: Trainee → Analista → PM → Head of Asset. Cada etapa exige compreensão progressiva do processo de gestão, das ferramentas, e do pensamento macro.</p>
+            <div contenteditable="true" class="ob-editable">Descreva aqui os critérios de progressão da equipe — o que é avaliado, como funciona a eleição de novos PMs, etc.</div>
+            <div class="ob-editable-hint">✏ Clique para editar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div id="page-faq" class="page">
+      <div class="sec-title">FAQ — Manual do fundo</div>
+      <div class="card" style="padding:0 22px"><div id="faq-list"></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modal-reuniao">
+  <div class="modal">
+    <div class="modal-title">Nova ata de comitê<button class="modal-close" onclick="closeModal('modal-reuniao')">×</button></div>
+    <label class="form-label">Data</label><input type="date" id="r-data">
+    <label class="form-label">Panorama macro</label><textarea id="r-macro" placeholder="Fed manteve juros. BCB sinalizou pausa..."></textarea>
+    <label class="form-label">Posições revisadas</label><textarea id="r-posicoes" placeholder="URNM — mantida. IAU — aumentamos para 7%..."></textarea>
+    <label class="form-label">Decisões tomadas</label><textarea id="r-decisoes" placeholder="Rebalance aprovado em LFT 2031 para 26%..."></textarea>
+    <label class="form-label">Próximos passos</label><textarea id="r-proximos" placeholder="Davi atualiza lâmina até sexta..."></textarea>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-reuniao')">Cancelar</button><button class="btn btn-primary" onclick="salvarReuniao()">Salvar ata</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-tese">
+  <div class="modal">
+    <div class="modal-title">Nova tese<button class="modal-close" onclick="closeModal('modal-tese')">×</button></div>
+    <label class="form-label">Ativo</label><input type="text" id="t-ativo" placeholder="Ex: URNM">
+    <label class="form-label">Proposto por</label><input type="text" id="t-autor" placeholder="Ex: PM1 — Internacional">
+    <label class="form-label">Tese</label><textarea id="t-tese" style="min-height:90px" placeholder="Descreva a tese, catalisadores e prazo..."></textarea>
+    <label class="form-label">Risco principal</label><input type="text" id="t-risco" placeholder="Ex: Queda no preço do urânio...">
+    <label class="form-label">Stop / condição de saída</label><input type="text" id="t-stop" placeholder="Ex: Sair se cair 15% ou tese mudar">
+    <label class="form-label">Status</label>
+    <select id="t-status"><option value="ativa">Ativa</option><option value="revisao">Em revisão</option><option value="encerrada">Encerrada</option></select>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-tese')">Cancelar</button><button class="btn btn-primary" onclick="salvarTese()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-trainee">
+  <div class="modal">
+    <div class="modal-title">Novo trainee<button class="modal-close" onclick="closeModal('modal-trainee')">×</button></div>
+    <label class="form-label">Nome completo</label><input type="text" id="tr-nome" placeholder="Ex: João Silva">
+    <label class="form-label">Turma / processo</label><input type="text" id="tr-turma" placeholder="Ex: 2026.1">
+    <label class="form-label">Nota — Prova teórica (0–10)</label><input type="number" id="tr-n1" min="0" max="10" step="0.1" placeholder="0.0">
+    <label class="form-label">Nota — Caso prático (0–10)</label><input type="number" id="tr-n2" min="0" max="10" step="0.1" placeholder="0.0">
+    <label class="form-label">Nota — Apresentação (0–10)</label><input type="number" id="tr-n3" min="0" max="10" step="0.1" placeholder="0.0">
+    <label class="form-label">Nota — Participação (0–10)</label><input type="number" id="tr-n4" min="0" max="10" step="0.1" placeholder="0.0">
+    <label class="form-label">Observações</label><textarea id="tr-obs" placeholder="Comentários qualitativos sobre o trainee..."></textarea>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-trainee')">Cancelar</button><button class="btn btn-primary" onclick="salvarTrainee()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pending">
+  <div class="modal">
+    <div class="modal-title">Nova decisão pendente<button class="modal-close" onclick="closeModal('modal-pending')">×</button></div>
+    <label class="form-label">Descrição</label><input type="text" id="pd-texto" placeholder="Ex: Davi atualiza lâmina de maio até sexta">
+    <label class="form-label">Responsável</label><input type="text" id="pd-resp" placeholder="Ex: Davi / PM1">
+    <label class="form-label">Prazo</label><input type="date" id="pd-prazo">
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-pending')">Cancelar</button><button class="btn btn-primary" onclick="salvarPending()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-detalhe">
+  <div class="modal">
+    <div class="modal-title"><span id="detalhe-titulo">Detalhe</span><button class="modal-close" onclick="closeModal('modal-detalhe')">×</button></div>
+    <div id="detalhe-corpo"></div>
+  </div>
+</div>
+<script>
+// ── DADOS ──
+const CARTEIRA = [
+  {a:"LFT 2031",t:"Tesouro",p:0.240,k:"LFT 2031",cls:"RF Brasil"},
+  {a:"NTN-B 2029",t:"Tesouro",p:0.195,k:"NTNB 2029",cls:"RF Brasil"},
+  {a:"NTN-B 2035",t:"Tesouro",p:0.145,k:"NTNB 2035",cls:"RF Brasil"},
+  {a:"STIP",t:"ETF USD",p:0.070,k:"STIP US Equity",cls:"RF Global"},
+  {a:"IAU",t:"ETF USD",p:0.050,k:"IAU US Equity",cls:"Commodities"},
+  {a:"Swedish Gov Bond",t:"Bond",p:0.050,k:"GSGB10YR Index",cls:"RF Global"},
+  {a:"Siemens Energy Bond",t:"Bond",p:0.040,k:"Siemens NRG 29",cls:"RF Global"},
+  {a:"IVV",t:"ETF USD",p:0.030,k:"IVV US Equity",cls:"Ações Globais"},
+  {a:"BOVA11",t:"Ação BR",p:0.030,k:"BOVA11 BZ Equity",cls:"Ações BR"},
+  {a:"UTLL11",t:"Ação BR",p:0.030,k:"UTLL11 BZ Equity",cls:"Ações BR"},
+  {a:"CPER",t:"ETF USD",p:0.025,k:"CPER US Equity",cls:"Commodities"},
+  {a:"URNM",t:"ETF USD",p:0.020,k:"URNM US Equity",cls:"Ações Globais"},
+  {a:"REMX",t:"ETF USD",p:0.020,k:"REMX US Equity",cls:"Ações Globais"},
+  {a:"RAIL3",t:"Ação BR",p:0.020,k:"RAIL3 BZ Equity",cls:"Ações BR"},
+  {a:"CORN",t:"ETF USD",p:0.015,k:"CORN US Equity",cls:"Commodities"},
+  {a:"CANE",t:"ETF USD",p:0.010,k:"CANE US Equity",cls:"Commodities"},
+  {a:"Bitcoin",t:"Cripto",p:0.010,k:"XBT Curncy",cls:"Cripto"},
+];
+
+const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
+const MONTHLY_CDI  = [1.14,1.10,1.28,1.16,1.22,1.28,1.05,1.22,1.16,1.00,1.21,1.09,1.07];
+const MONTHLY_LABELS = ["mai/25","jun/25","jul/25","ago/25","set/25","out/25","nov/25","dez/25","jan/26","fev/26","mar/26","abr/26","mai/26"];
+
+const EVENTS_2026 = {
+  "2026-01-08":[{t:"ev-us",n:"CPI EUA (dez/25)"}],
+  "2026-01-10":[{t:"ev-us",n:"Payroll EUA (dez/25)"}],
+  "2026-01-21":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-01-22":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-01-30":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-02-04":[{t:"ev-us",n:"Payroll EUA (jan/26)"}],
+  "2026-02-11":[{t:"ev-us",n:"CPI EUA (jan/26)"}],
+  "2026-02-18":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-02-19":[{t:"ev-us",n:"FOMC — ata"}],
+  "2026-03-04":[{t:"ev-us",n:"Payroll EUA (fev/26)"}],
+  "2026-03-11":[{t:"ev-us",n:"CPI EUA (fev/26)"}],
+  "2026-03-18":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-03-19":[{t:"ev-jp",n:"BoJ — decisão de juros"}],
+  "2026-03-25":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-04-08":[{t:"ev-us",n:"Payroll EUA (mar/26)"}],
+  "2026-04-10":[{t:"ev-us",n:"CPI EUA (mar/26)"}],
+  "2026-04-16":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-04-17":[{t:"ev-br",n:"PIB Brasil Q1/26 (prévia)"}],
+  "2026-04-29":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-05-06":[{t:"ev-us",n:"Payroll EUA (abr/26)"}],
+  "2026-05-07":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-05-13":[{t:"ev-us",n:"CPI EUA (abr/26)"}],
+  "2026-05-20":[{t:"ev-jp",n:"BoJ — decisão de juros"}],
+  "2026-06-03":[{t:"ev-us",n:"Payroll EUA (mai/26)"}],
+  "2026-06-10":[{t:"ev-us",n:"CPI EUA (mai/26)"}],
+  "2026-06-10":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-06-11":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-06-17":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-07-08":[{t:"ev-us",n:"Payroll EUA (jun/26)"}],
+  "2026-07-10":[{t:"ev-us",n:"CPI EUA (jun/26)"}],
+  "2026-07-17":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-07-22":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-07-23":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-08-05":[{t:"ev-us",n:"Payroll EUA (jul/26)"}],
+  "2026-08-12":[{t:"ev-us",n:"CPI EUA (jul/26)"}],
+  "2026-08-19":[{t:"ev-jp",n:"BoJ — decisão de juros"}],
+  "2026-08-26":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-09-02":[{t:"ev-us",n:"Payroll EUA (ago/26)"}],
+  "2026-09-09":[{t:"ev-us",n:"CPI EUA (ago/26)"}],
+  "2026-09-16":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-09-17":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-09-24":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-10-07":[{t:"ev-us",n:"Payroll EUA (set/26)"}],
+  "2026-10-09":[{t:"ev-us",n:"CPI EUA (set/26)"}],
+  "2026-10-21":[{t:"ev-jp",n:"BoJ — decisão de juros"}],
+  "2026-10-22":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-10-28":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-11-04":[{t:"ev-us",n:"Payroll EUA (out/26)"}],
+  "2026-11-11":[{t:"ev-us",n:"CPI EUA (out/26)"}],
+  "2026-11-12":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-12-02":[{t:"ev-us",n:"Payroll EUA (nov/26)"}],
+  "2026-12-09":[{t:"ev-us",n:"CPI EUA (nov/26)"}],
+  "2026-12-09":[{t:"ev-eu",n:"BCE — decisão de juros"}],
+  "2026-12-10":[{t:"ev-br",n:"Copom — decisão de juros"}],
+  "2026-12-16":[{t:"ev-us",n:"FOMC — decisão de juros"}],
+  "2026-12-17":[{t:"ev-jp",n:"BoJ — decisão de juros"}],
+};
+
+const FAQS = [
+  {q:"Como atualizo a cota do fundo?",a:`<ol><li>Abra o Bloomberg e busque o preço de fechamento de cada ativo.</li><li>Preencha o <strong>Template_Bloomberg.xlsx</strong> (coluna amarela).</li><li>Salve e envie para o Claude no chat do projeto.</li><li>O Claude processa e devolve a planilha atualizada.</li></ol><br>Alternativa: rode <code>python atualiza_prospecta.py</code> no terminal.`},
+  {q:"Como registramos um rebalance?",a:`<ol><li>Decisão tomada no comitê e registrada em ata.</li><li>Avise o Claude: <em>"Rebalance em DD/MM: Ativo A = X%, Ativo B = Y%..."</em></li><li>Claude atualiza o script Python.</li><li>Rode o script para calcular a cota com os novos pesos.</li></ol>`},
+  {q:"Quando stopar uma posição?",a:`Stop deve ser acionado quando:<ul><li>Ativo atinge nível definido na tese (stop técnico)</li><li>Tese macro deixa de ser válida (stop fundamental)</li><li>Posição gera drawdown &gt; 15% sem catalisador de reversão</li><li>Comitê por maioria decide encerrar</li></ul><br><strong>Emergência:</strong> queda &gt; 5% intraday permite ao Head acionar stop diretamente.`},
+  {q:"Como aumentar uma posição?",a:`<ol><li>PM apresenta justificativa no comitê.</li><li>Comitê aprova novo peso-alvo.</li><li>Decisão registrada em ata.</li><li>Claude atualiza o script.</li><li>Ajuste no próximo rebalance ou imediatamente, conforme urgência.</li></ol>`},
+  {q:"Como funciona o CDI como benchmark?",a:`<ul><li><strong>Alpha</strong> = retorno do fundo − CDI no período</li><li><strong>% do CDI</strong> = retorno do fundo ÷ CDI (150% = rendeu 1,5× o CDI)</li><li><strong>Sharpe</strong> usa o CDI como taxa livre de risco</li></ul><br>CDI mensal disponível em bcb.gov.br. Informe ao Claude no último dia útil do mês.`},
+  {q:"Como gerar a lâmina mensal?",a:`<ol><li>Cotas do mês atualizadas.</li><li>Informe o CDI do mês ao Claude.</li><li>Peça: <em>"Gera a lâmina de [mês]"</em></li><li>Claude entrega o arquivo Excel para download.</li></ol>`},
+  {q:"Quem pode tomar decisões?",a:`<ul><li><strong>Head of Asset:</strong> decisões finais, stops de emergência, aprovação de posições</li><li><strong>PMs:</strong> propõem teses, gerem suas áreas, apresentam no comitê</li><li><strong>Analistas:</strong> suporte quantitativo e análise</li><li><strong>Trainees:</strong> não participam de decisões durante o processo</li></ul>`},
+  {q:"Como ler as métricas da lâmina?",a:`<ul><li><strong>Cota:</strong> valor atual (base 1,0 em abr/25)</li><li><strong>Vol anualizada:</strong> desvio padrão diário × √252</li><li><strong>Sharpe:</strong> retorno acima do CDI ÷ volatilidade — acima de 1 é bom</li><li><strong>Máx drawdown:</strong> maior queda desde um pico</li><li><strong>VaR 95%:</strong> perda máxima esperada em 95% dos dias</li><li><strong>Alpha:</strong> retorno do fundo menos CDI — positivo = bateu o benchmark</li></ul>`},
+];
+
+// ── STATE ──
+let reunioes=[], teses=[], trainees=[], pendings=[];
+let calYear=2026, calMonth=new Date().getMonth();
+let filtroTese='todas';
+let simChart=null, simData={};
+
+// ── STORAGE ──
+async function loadStorage(){
+  try{
+    let r=await window.storage.get('pf_reunioes'); if(r) reunioes=JSON.parse(r.value);
+    let t=await window.storage.get('pf_teses'); if(t) teses=JSON.parse(t.value);
+    let tr=await window.storage.get('pf_trainees'); if(tr) trainees=JSON.parse(tr.value);
+    let pd=await window.storage.get('pf_pendings'); if(pd) pendings=JSON.parse(pd.value);
+  }catch(e){}
+  renderAll();
+}
+async function save(key,data){ try{await window.storage.set(key,JSON.stringify(data));}catch(e){} }
+
+// ── INIT ──
+function renderAll(){
+  renderCarteira(); renderComite(); renderTeses(); renderFAQ();
+  renderTrainees(); renderPendings(); updateBadges();
+  initCharts(); initSimulador(); renderCalendario();
+  document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('r-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('pd-prazo').value=new Date().toISOString().split('T')[0];
+}
+
+function updateBadges(){
+  document.getElementById('badge-comite').textContent=reunioes.length;
+  document.getElementById('badge-teses').textContent=teses.filter(t=>t.status==='ativa').length;
+  document.getElementById('badge-trainees').textContent=trainees.length;
+}
+
+// ── NAV ──
+const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',scorecard:'Scorecard do Fundo',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual'};
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
+  document.getElementById('topbar-title').textContent=TITLES[id]||id;
+  if(id==='performance') setTimeout(initCharts,100);
+  if(id==='scorecard') setTimeout(initScoreChart,100);
+  if(id==='simulador') setTimeout(initSimulador,100);
+}
+
+// ── CARTEIRA ──
+function renderCarteira(){
+  document.getElementById('tbody-carteira').innerHTML=CARTEIRA.map(a=>{
+    const pct=(a.p*100).toFixed(1);
+    const w=Math.min(a.p/0.24*100,100).toFixed(0);
+    return `<tr><td style="font-family:var(--serif);font-weight:700">${a.a}</td><td><span class="pill pill-white">${a.t}</span></td><td style="color:var(--g400);font-size:11px">${a.k}</td><td style="min-width:130px"><div style="display:flex;align-items:center;gap:6px"><span style="font-family:var(--serif);font-weight:700;min-width:34px">${pct}%</span><div class="prog" style="flex:1"><div class="prog-fill" style="width:${w}%"></div></div></div></td><td><span class="pill pill-green">Ativa</span></td></tr>`;
+  }).join('');
+}
+
+// ── CHARTS ──
+function initCharts(){
+  // Acumulado
+  const ctxR=document.getElementById('chart-retorno');
+  if(!ctxR) return;
+  if(ctxR._chart) ctxR._chart.destroy();
+  let fa=1,ca=1;
+  const fd=[1],cd=[1];
+  MONTHLY_FUND.forEach(r=>{fa*=(1+r/100);fd.push(+((fa-1)*100).toFixed(4));});
+  MONTHLY_CDI.forEach(r=>{ca*=(1+r/100);cd.push(+((ca-1)*100).toFixed(4));});
+  const labels2=["abr/25",...MONTHLY_LABELS];
+  ctxR._chart=new Chart(ctxR,{type:'line',data:{labels:labels2,datasets:[
+    {label:'Prospecta FIM',data:fd,borderColor:'#0a0a0a',borderWidth:2,fill:false,tension:.3,pointRadius:2},
+    {label:'CDI',data:cd,borderColor:'#9a9a9a',borderWidth:1.5,borderDash:[4,3],fill:false,tension:.3,pointRadius:0}
+  ]},options:{responsive:true,plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{family:'Lora',size:10}},grid:{display:false}}}}});
+
+  // Drawdown
+  const ctxD=document.getElementById('chart-dd');
+  if(!ctxD) return;
+  if(ctxD._chart) ctxD._chart.destroy();
+  let peak=1,cotaAcum=1;
+  const ddData=[];
+  MONTHLY_FUND.forEach(r=>{cotaAcum*=(1+r/100);if(cotaAcum>peak)peak=cotaAcum;ddData.push(+((cotaAcum/peak-1)*100).toFixed(2));});
+  ctxD._chart=new Chart(ctxD,{type:'line',data:{labels:MONTHLY_LABELS,datasets:[{label:'Drawdown',data:ddData,borderColor:'#9b1c1c',backgroundColor:'rgba(155,28,28,0.08)',borderWidth:1.5,fill:true,tension:.3,pointRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{family:'Lora',size:10}},grid:{display:false}}}}});
+
+  // Barras mensais
+  const ctxM=document.getElementById('chart-mensal');
+  if(!ctxM) return;
+  if(ctxM._chart) ctxM._chart.destroy();
+  ctxM._chart=new Chart(ctxM,{type:'bar',data:{labels:MONTHLY_LABELS,datasets:[
+    {label:'Fundo',data:MONTHLY_FUND,backgroundColor:MONTHLY_FUND.map(v=>v>=0?'rgba(10,10,10,0.8)':'rgba(155,28,28,0.7)'),borderRadius:2},
+    {label:'CDI',data:MONTHLY_CDI,backgroundColor:'rgba(154,154,154,0.4)',borderRadius:2}
+  ]},options:{responsive:true,plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{family:'Lora',size:9}},grid:{display:false}}}}});
+}
+
+function initScoreChart(){
+  const ctx=document.getElementById('chart-score');
+  if(!ctx||ctx._chart) return;
+  ctx._chart=new Chart(ctx,{type:'bar',data:{labels:MONTHLY_LABELS,datasets:[{label:'vs CDI',data:MONTHLY_FUND.map((f,i)=>+(f-MONTHLY_CDI[i]).toFixed(2)),backgroundColor:MONTHLY_FUND.map((f,i)=>f>=MONTHLY_CDI[i]?'rgba(10,10,10,0.8)':'rgba(155,28,28,0.7)'),borderRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{family:'Lora',size:9}},grid:{display:false}}}}});
+}
+
+// ── SIMULADOR ──
+function initSimulador(){
+  const inp=document.getElementById('sim-inputs');
+  if(!inp) return;
+  CARTEIRA.forEach(a=>{simData[a.a]=+(a.p*100).toFixed(1);});
+  renderSimInputs();
+}
+
+function renderSimInputs(){
+  const inp=document.getElementById('sim-inputs');
+  inp.innerHTML=CARTEIRA.map(a=>`
+    <div class="sim-row">
+      <span class="sim-label">${a.a}</span>
+      <input class="sim-input" type="number" min="0" max="100" step="0.5" value="${simData[a.a]||0}" onchange="simData['${a.a}']=+this.value;updateSim()">
+      <span style="font-size:11px;color:var(--g400);min-width:28px">${(a.p*100).toFixed(1)}%</span>
+    </div>`).join('');
+  updateSim();
+}
+
+function updateSim(){
+  const total=Object.values(simData).reduce((s,v)=>s+(+v||0),0);
+  const tv=document.getElementById('sim-total-val');
+  const tt=document.getElementById('sim-total');
+  tv.textContent=total.toFixed(1)+'%';
+  const ok=Math.abs(total-100)<0.11;
+  tt.className='sim-total '+(ok?'ok':'err');
+
+  const alertas=document.getElementById('sim-alertas');
+  let msgs=[];
+  if(!ok) msgs.push(`<div class="alert-box alert-${total>100?'err':'warn'}">Total: ${total.toFixed(1)}% — deve ser exatamente 100%.</div>`);
+  Object.entries(simData).forEach(([k,v])=>{if(v>25)msgs.push(`<div class="alert-box alert-warn">${k}: ${v}% — acima de 25% (concentração elevada).</div>`);});
+  alertas.innerHTML=msgs.join('');
+
+  // Classes
+  const classes={};
+  CARTEIRA.forEach(a=>{if(!classes[a.cls])classes[a.cls]=0;classes[a.cls]+=simData[a.a]||0;});
+  const classesAtual={};
+  CARTEIRA.forEach(a=>{if(!classesAtual[a.cls])classesAtual[a.cls]=0;classesAtual[a.cls]+=a.p*100;});
+
+  const diff=document.getElementById('sim-diff');
+  diff.innerHTML=`<table><thead><tr><th>Classe</th><th>Atual</th><th>Proposto</th><th>Δ</th></tr></thead><tbody>`+
+    Object.keys(classes).map(c=>{
+      const d=((classes[c]||0)-(classesAtual[c]||0));
+      return `<tr><td>${c}</td><td>${(classesAtual[c]||0).toFixed(1)}%</td><td>${(classes[c]||0).toFixed(1)}%</td><td style="color:${d>0?'var(--green)':d<0?'var(--red)':'var(--g400)'}">${d>0?'+':''}${d.toFixed(1)}%</td></tr>`;
+    }).join('')+`</tbody></table>`;
+
+  // Gráfico
+  const ctx=document.getElementById('chart-sim');
+  if(!ctx) return;
+  if(simChart) simChart.destroy();
+  const labels=Object.keys(classes);
+  simChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'Atual',data:labels.map(c=>+(classesAtual[c]||0).toFixed(1)),backgroundColor:'rgba(154,154,154,0.5)',borderRadius:3},
+    {label:'Proposto',data:labels.map(c=>+(classes[c]||0).toFixed(1)),backgroundColor:'rgba(10,10,10,0.8)',borderRadius:3}
+  ]},options:{responsive:true,plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},scales:{y:{ticks:{callback:v=>v+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{family:'Lora',size:10}},grid:{display:false}}}}});
+}
+
+function resetSim(){
+  CARTEIRA.forEach(a=>{simData[a.a]=+(a.p*100).toFixed(1);});
+  renderSimInputs();
+}
+
+// ── CALENDÁRIO ──
+const MESES_PT=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendario();}
+
+function renderCalendario(){
+  document.getElementById('cal-title').textContent=MESES_PT[calMonth]+' de '+calYear;
+  const grid=document.getElementById('cal-grid');
+  const first=new Date(calYear,calMonth,1).getDay();
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  const today=new Date();
+  let cells='';
+  for(let i=0;i<first;i++){
+    const d=prevDays-first+1+i;
+    cells+=`<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
+  }
+  for(let d=1;d<=days;d++){
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=EVENTS_2026[key]||[];
+    const hasEv=evs.length>0;
+    cells+=`<div class="cal-cell${isToday?' today':''}${hasEv?' has-event':''}">
+      <div class="cal-date">${d}</div>
+      ${evs.map(e=>`<div class="cal-event ${e.t}" title="${e.n}">${e.n}</div>`).join('')}
+    </div>`;
+  }
+  const total=first+days;
+  const remaining=(7-total%7)%7;
+  for(let i=1;i<=remaining;i++) cells+=`<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
+  grid.innerHTML=cells;
+}
+
+// ── COMITE ──
+function renderComite(){
+  const el=document.getElementById('lista-reunioes');
+  if(!reunioes.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>Nenhuma ata registrada ainda.</p></div>';return;}
+  el.innerHTML=[...reunioes].reverse().map((r,i)=>`
+    <div class="reuniao-card" onclick="verReuniao(${reunioes.length-1-i})">
+      <div class="reuniao-data">${r.data}</div>
+      <div class="reuniao-titulo">Comitê semanal</div>
+      <div class="reuniao-preview">${r.decisoes||'Sem decisões registradas'}</div>
+    </div>`).join('');
+}
+
+async function salvarReuniao(){
+  const r={data:document.getElementById('r-data').value,macro:document.getElementById('r-macro').value,posicoes:document.getElementById('r-posicoes').value,decisoes:document.getElementById('r-decisoes').value,proximos:document.getElementById('r-proximos').value};
+  if(!r.data){alert('Informe a data.');return;}
+  reunioes.push(r);
+  await save('pf_reunioes',reunioes);
+  if(r.proximos){pendings.push({texto:r.proximos,resp:'Comitê',prazo:r.data,done:false});await save('pf_pendings',pendings);}
+  closeModal('modal-reuniao');
+  ['r-macro','r-posicoes','r-decisoes','r-proximos'].forEach(id=>document.getElementById(id).value='');
+  renderComite();renderPendings();updateBadges();
+}
+
+function verReuniao(i){
+  const r=reunioes[i];
+  document.getElementById('detalhe-titulo').textContent='Ata — '+r.data;
+  document.getElementById('detalhe-corpo').innerHTML=`
+    <div class="detail-section"><div class="detail-label">Panorama macro</div><div class="detail-val">${r.macro||'—'}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Posições revisadas</div><div class="detail-val">${r.posicoes||'—'}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Decisões tomadas</div><div class="detail-val">${r.decisoes||'—'}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Próximos passos</div><div class="detail-val">${r.proximos||'—'}</div></div>`;
+  openModal('modal-detalhe');
+}
+
+// ── TESES ──
+function renderTeses(){
+  const el=document.getElementById('lista-teses');
+  const lista=filtroTese==='todas'?teses:teses.filter(t=>t.status===filtroTese);
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">💡</div><p>Nenhuma tese encontrada.</p></div>';return;}
+  const pm={ativa:'pill-green',revisao:'pill-amber',encerrada:'pill-white'};
+  const lm={ativa:'Ativa',revisao:'Em revisão',encerrada:'Encerrada'};
+  el.innerHTML=lista.map(t=>{const ri=teses.indexOf(t);return`
+    <div class="tese-card" onclick="verTese(${ri})">
+      <div class="tese-hdr"><div><div class="tese-ativo">${t.ativo}</div><div class="tese-autor">por ${t.autor} · ${t.data}</div></div><span class="pill ${pm[t.status]}">${lm[t.status]}</span></div>
+      <div class="tese-texto">${t.tese}</div>
+      ${t.stop?`<div class="tese-stop">Stop: ${t.stop}</div>`:''}
+    </div>`;}).join('');
+}
+
+async function salvarTese(){
+  const t={ativo:document.getElementById('t-ativo').value.trim(),autor:document.getElementById('t-autor').value.trim(),tese:document.getElementById('t-tese').value.trim(),risco:document.getElementById('t-risco').value.trim(),stop:document.getElementById('t-stop').value.trim(),status:document.getElementById('t-status').value,data:new Date().toLocaleDateString('pt-BR')};
+  if(!t.ativo||!t.tese){alert('Preencha ativo e tese.');return;}
+  teses.push(t);await save('pf_teses',teses);
+  closeModal('modal-tese');
+  ['t-ativo','t-autor','t-tese','t-risco','t-stop'].forEach(id=>document.getElementById(id).value='');
+  renderTeses();updateBadges();
+}
+
+function verTese(i){
+  const t=teses[i];
+  const lm={ativa:'Ativa',revisao:'Em revisão',encerrada:'Encerrada'};
+  const pm={ativa:'pill-green',revisao:'pill-amber',encerrada:'pill-white'};
+  document.getElementById('detalhe-titulo').textContent='Tese — '+t.ativo;
+  document.getElementById('detalhe-corpo').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span class="pill ${pm[t.status]}">${lm[t.status]}</span><span style="font-size:11px;color:var(--g400)">por ${t.autor} · ${t.data}</span></div>
+    <div class="detail-section"><div class="detail-label">Tese</div><div class="detail-val">${t.tese}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Risco principal</div><div class="detail-val">${t.risco||'—'}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Stop / condição de saída</div><div class="detail-val">${t.stop||'—'}</div></div>`;
+  openModal('modal-detalhe');
+}
+
+function filtrarTeses(f,btn){
+  filtroTese=f;
+  document.querySelectorAll('#filtros-tese .btn').forEach(b=>{b.className='btn btn-secondary btn-sm';});
+  btn.className='btn btn-primary btn-sm';
+  renderTeses();
+}
+
+// ── TRAINEES ──
+function renderTrainees(){
+  const el=document.getElementById('lista-trainees');
+  if(!trainees.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎓</div><p>Nenhum trainee cadastrado.</p></div>';return;}
+  el.innerHTML=trainees.map((tr,i)=>{
+    const notas=[+tr.n1||0,+tr.n2||0,+tr.n3||0,+tr.n4||0].filter(n=>n>0);
+    const media=notas.length?notas.reduce((a,b)=>a+b,0)/notas.length:0;
+    const status=media>=7?'pill-green':media>=5?'pill-amber':'pill-red';
+    const sLabel=media>=7?'Aprovado':media>=5?'Em avaliação':'Reprovado';
+    return`<div class="trainee-card" onclick="verTrainee(${i})">
+      <div class="trainee-hdr">
+        <div><div class="trainee-name">${tr.nome}</div><div class="trainee-meta">Turma ${tr.turma}</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="pill ${status}">${sLabel}</span>
+          <div class="nota-media" style="color:${media>=7?'var(--green)':media>=5?'var(--amber)':'var(--red)'}">${media.toFixed(1)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;font-size:11px;color:var(--g400)">
+        <span>Teórica: <strong style="color:var(--black)">${tr.n1||'—'}</strong></span>
+        <span>Caso: <strong style="color:var(--black)">${tr.n2||'—'}</strong></span>
+        <span>Apresentação: <strong style="color:var(--black)">${tr.n3||'—'}</strong></span>
+        <span>Participação: <strong style="color:var(--black)">${tr.n4||'—'}</strong></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function salvarTrainee(){
+  const tr={nome:document.getElementById('tr-nome').value.trim(),turma:document.getElementById('tr-turma').value.trim(),n1:document.getElementById('tr-n1').value,n2:document.getElementById('tr-n2').value,n3:document.getElementById('tr-n3').value,n4:document.getElementById('tr-n4').value,obs:document.getElementById('tr-obs').value.trim()};
+  if(!tr.nome){alert('Informe o nome.');return;}
+  trainees.push(tr);await save('pf_trainees',trainees);
+  closeModal('modal-trainee');
+  ['tr-nome','tr-turma','tr-n1','tr-n2','tr-n3','tr-n4','tr-obs'].forEach(id=>document.getElementById(id).value='');
+  renderTrainees();updateBadges();
+}
+
+function verTrainee(i){
+  const tr=trainees[i];
+  const notas=[+tr.n1||0,+tr.n2||0,+tr.n3||0,+tr.n4||0].filter(n=>n>0);
+  const media=notas.length?notas.reduce((a,b)=>a+b,0)/notas.length:0;
+  document.getElementById('detalhe-titulo').textContent=tr.nome;
+  document.getElementById('detalhe-corpo').innerHTML=`
+    <div class="detail-section"><div class="detail-label">Turma</div><div class="detail-val">${tr.turma}</div></div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Notas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div><div style="font-size:10px;color:var(--g400)">Prova teórica</div><div style="font-family:var(--serif);font-size:18px;font-weight:700">${tr.n1||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--g400)">Caso prático</div><div style="font-family:var(--serif);font-size:18px;font-weight:700">${tr.n2||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--g400)">Apresentação</div><div style="font-family:var(--serif);font-size:18px;font-weight:700">${tr.n3||'—'}</div></div>
+        <div><div style="font-size:10px;color:var(--g400)">Participação</div><div style="font-family:var(--serif);font-size:18px;font-weight:700">${tr.n4||'—'}</div></div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--g100)"><span style="font-size:10px;color:var(--g400)">Média</span><div style="font-family:var(--serif);font-size:24px;font-weight:700;color:${media>=7?'var(--green)':media>=5?'var(--amber)':'var(--red)'}">${media.toFixed(1)}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="detail-section"><div class="detail-label">Observações</div><div class="detail-val">${tr.obs||'—'}</div></div>`;
+  openModal('modal-detalhe');
+}
+
+// ── PENDINGS ──
+function renderPendings(){
+  const el=document.getElementById('pending-list');
+  if(!pendings.length){el.innerHTML='<div class="empty" style="padding:16px"><p>Nenhuma decisão pendente.</p></div>';return;}
+  el.innerHTML=pendings.map((p,i)=>`
+    <div class="pending-item">
+      <div class="pending-check${p.done?' done':''}" onclick="togglePending(${i})"></div>
+      <div style="flex:1">
+        <div class="pending-text${p.done?' done':''}">${p.texto}</div>
+        <div class="pending-meta">${p.resp?p.resp+' · ':''}${p.prazo||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function togglePending(i){pendings[i].done=!pendings[i].done;await save('pf_pendings',pendings);renderPendings();}
+
+async function salvarPending(){
+  const p={texto:document.getElementById('pd-texto').value.trim(),resp:document.getElementById('pd-resp').value.trim(),prazo:document.getElementById('pd-prazo').value,done:false};
+  if(!p.texto){alert('Descreva a decisão.');return;}
+  pendings.push(p);await save('pf_pendings',pendings);
+  closeModal('modal-pending');
+  ['pd-texto','pd-resp'].forEach(id=>document.getElementById(id).value='');
+  renderPendings();
+}
+
+// ── CARTA DO GESTOR ──
+function gerarCarta(){
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const mes=v('carta-mes')||'[Mês]';
+  const ativ=v('carta-atividade');
+  const inf=v('carta-inflacao');
+  const copom=v('carta-copom');
+  const fisc=v('carta-fiscal');
+  const cambio=v('carta-cambio');
+  const euaAt=v('carta-eua-ativ');
+  const euaInf=v('carta-eua-inf');
+  const fed=v('carta-fed');
+  const europa=v('carta-europa');
+  const japao=v('carta-japao');
+  const visao=v('carta-visao');
+  const sep='━'.repeat(50);
+  const sec=(t,c)=>c?('\n'+sep+'\n'+t.toUpperCase()+'\n'+sep+'\n'+c):'';
+  const linediv='─'.repeat(52);
+  const carta=[
+    'CARTA DO GESTOR — '+mes.toUpperCase(),
+    'Prospecta FIM · Nucleo de Financas Insper',
+    linediv,'',
+    'DISCLAIMER',
+    linediv,
+    'O Prospecta FIM e um fundo multimercado ficticio criado com o objetivo de simular uma gestao completa de portfolio voltada para o longo prazo. A iniciativa faz parte do desenvolvimento da area de Asset Management dentro do Nucleo de Financas Insper.',
+    '',
+    'A carta do gestor e um dos instrumentos desse processo. Nela apresentamos nossa leitura do cenario macroeconomico do mes, bem como algumas das principais visoes que orientam nossas discussoes sobre alocacao e posicionamento de portfolio. Por se tratar de um projeto academico, todo o conteudo possui carater exclusivamente educacional e nao constitui recomendacao de investimento.',
+    sec('CENARIO INTERNO — Atividade Economica e Mercado de Trabalho',ativ),
+    sec('CENARIO INTERNO — Inflacao',inf),
+    sec('POLITICA MONETARIA — Copom e Selic',copom),
+    sec('POLITICA FISCAL',fisc),
+    sec('CAMBIO E MERCADOS',cambio),
+    sec('CENARIO EXTERNO — EUA: Atividade e Mercado de Trabalho',euaAt),
+    sec('CENARIO EXTERNO — EUA: Inflacao',euaInf),
+    sec('CENARIO EXTERNO — EUA: Politica Monetaria (FOMC)',fed),
+    sec('CENARIO EXTERNO — Europa (BoE / BCE)',europa),
+    sec('CENARIO EXTERNO — Japao (BoJ)',japao),
+    sec('VISAO PARA O FUTURO — Posicionamento do Fundo',visao),
+    '',linediv,
+    'Nucleo de Financas Insper',
+    'Prospecta FIM — Carta do Gestor, '+mes
+  ].join('\n');
+  document.getElementById('carta-preview').textContent=carta;
+}
+
+function limparCarta(){
+  ['carta-mes','carta-atividade','carta-inflacao','carta-copom','carta-fiscal',
+   'carta-cambio','carta-eua-ativ','carta-eua-inf','carta-fed','carta-europa',
+   'carta-japao','carta-visao'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('carta-preview').textContent='Preencha os campos e clique em "Gerar rascunho".';
+}
+
+function copiarCarta(){
+  const t=document.getElementById('carta-preview').textContent;
+  navigator.clipboard.writeText(t).then(function(){alert('Carta copiada!');}).catch(function(){alert('Selecione e copie manualmente.');});
+}
+
+// ── FAQ ──
+function renderFAQ(){
+  document.getElementById('faq-list').innerHTML=FAQS.map((f,i)=>`
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(${i})">${f.q}<span class="faq-chevron" id="faq-ch-${i}">›</span></div>
+      <div class="faq-a" id="faq-a-${i}">${f.a}</div>
+    </div>`).join('');
+}
+
+function toggleFaq(i){
+  const a=document.getElementById('faq-a-'+i);
+  const ch=document.getElementById('faq-ch-'+i);
+  const open=a.classList.toggle('open');
+  ch.style.transform=open?'rotate(90deg)':'';
+}
+
+// ── MODAIS ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ── START ──
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', loadStorage);
+} else {
+  loadStorage();
+}
+</script>
+</div><!-- /app-root -->
+</body>
+</html>
