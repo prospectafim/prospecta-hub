@@ -903,6 +903,248 @@ document.addEventListener('DOMContentLoaded',function(){
   </div>
 </div>
 <script>
+
+// ── API CONFIG ──
+const API_URL = "https://web-production-5cacc.up.railway.app";
+
+async function apiFetch(endpoint) {
+  try {
+    const r = await fetch(API_URL + endpoint);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch(e) {
+    console.warn('API error:', endpoint, e);
+    return null;
+  }
+}
+
+async function loadFromAPI() {
+  // Busca métricas e cotas do backend
+  const [status, metricas, cotas] = await Promise.all([
+    apiFetch('/api/status'),
+    apiFetch('/api/metricas'),
+    apiFetch('/api/cotas?limit=500'),
+  ]);
+
+  if (!metricas || !cotas) {
+    console.warn('API indisponível — usando dados estáticos');
+    return;
+  }
+
+  // ── Atualiza KPIs do Dashboard ──
+  const kpiGrid = document.getElementById('kpi-grid');
+  if (kpiGrid && metricas.cota_atual) {
+    const ret_mes = metricas.monthly ? Object.values(metricas.monthly).slice(-1)[0] : null;
+    const kpis = [
+      {l:'Cota atual',       v: metricas.cota_atual.toFixed(6),            sub:'base 1,0 em abr/25'},
+      {l:'Retorno mês',      v: ret_mes ? fmtPct(ret_mes) : '—',           sub: Object.keys(metricas.monthly||{}).slice(-1)[0]||'', neg: ret_mes < 0, pos: ret_mes >= 0},
+      {l:'Retorno acumulado',v: fmtPct(metricas.ret_total),                sub:'desde abr/25', pos: metricas.ret_total >= 0, neg: metricas.ret_total < 0},
+      {l:'PL estimado',      v: fmtPL(metricas.pl_atual),                  sub: metricas.data_atual||''},
+      {l:'Vol anualizada',   v: fmtPct(metricas.vol_anual),                sub:'histórica'},
+      {l:'Máx drawdown',     v: fmtPct(metricas.max_dd),                   sub: metricas.peak_date||'', neg: true},
+    ];
+    kpiGrid.innerHTML = kpis.map(k =>
+      '<div class="kpi-card">' +
+        '<div class="kpi-label">' + k.l + '</div>' +
+        '<div class="kpi-val ' + (k.pos?'pos':k.neg?'neg':'') + '">' + k.v + '</div>' +
+        '<div class="kpi-sub">' + k.sub + '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  // ── Atualiza métricas de risco no Dashboard ──
+  const riskEl = document.getElementById('risk-metrics-body');
+  if (riskEl && metricas.sharpe !== undefined) {
+    riskEl.innerHTML = [
+      ['Sharpe (desde início)', fmtNum(metricas.sharpe), metricas.sharpe < 0],
+      ['Alpha acumulado', fmtPct(metricas.alpha_total), metricas.alpha_total < 0],
+      ['VaR 95% (1 dia)', fmtPct(metricas.var95_d), true],
+      ['VaR 99% (1 dia)', fmtPct(metricas.var99_d), true],
+      ['CDI acumulado', fmtPct(metricas.cdi_acum), false],
+      ['% dias positivos', fmtPct(metricas.pct_dias_pos||0), false],
+    ].map(([l,v,neg]) =>
+      '<tr><td style="color:var(--g400)">' + l + '</td>' +
+      '<td style="text-align:right;font-family:var(--serif);font-weight:700;color:' +
+      (neg?'var(--red)':'var(--black)') + '">' + v + '</td></tr>'
+    ).join('');
+  }
+
+  // ── Atualiza Scorecard ──
+  updateScorecard(metricas);
+
+  // ── Atualiza gráficos com dados reais ──
+  if (cotas && cotas.length > 0) {
+    updateChartsFromAPI(cotas, metricas);
+  }
+
+  // ── Atualiza topbar date ──
+  if (metricas.data_atual) {
+    const d = new Date(metricas.data_atual + 'T12:00:00');
+    document.getElementById('topbar-date').textContent =
+      d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  }
+
+  console.log('API data loaded ✓', status);
+}
+
+function fmtPct(v) {
+  if (v === null || v === undefined) return '—';
+  return (v >= 0 ? '+' : '') + (v * 100).toFixed(2) + '%';
+}
+function fmtNum(v) {
+  if (v === null || v === undefined) return '—';
+  return (v >= 0 ? '' : '') + v.toFixed(3);
+}
+function fmtPL(v) {
+  if (!v) return '—';
+  if (v >= 1e6) return 'R$ ' + (v/1e6).toFixed(2) + 'M';
+  return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:0});
+}
+
+function updateScorecard(m) {
+  const el = id => document.getElementById(id);
+  if (!m) return;
+  const monthly = m.monthly || {};
+  const vals = Object.values(monthly);
+  const meses_pos = vals.filter(v => v > 0).length;
+  const meses_neg = vals.filter(v => v < 0).length;
+  const melhor = vals.length ? Math.max(...vals) : 0;
+  const pior   = vals.length ? Math.min(...vals) : 0;
+  const melhorMes = Object.entries(monthly).find(([k,v]) => v === melhor)?.[0] || '';
+  const piorMes   = Object.entries(monthly).find(([k,v]) => v === pior)?.[0] || '';
+
+  const sc = document.querySelector('.score-grid');
+  if (!sc) return;
+  const ddAberto = !m.recovery_date || m.recovery_date === 'None';
+  sc.innerHTML = [
+    {t:'Meses positivos',    v: meses_pos + ' de ' + vals.length, c:'pos'},
+    {t:'% acima do CDI',     v: m.meses_acima_cdi + ' de ' + vals.length + ' meses', c:''},
+    {t:'Melhor mês',         v: fmtPct(melhor) + ' (' + melhorMes + ')', c:'pos'},
+    {t:'Pior mês',           v: fmtPct(pior) + ' (' + piorMes + ')', c:'neg'},
+    {t:'Retorno anualizado', v: fmtPct(m.ret_anual) + ' vs CDI ' + fmtPct(m.cdi_anual), c: m.ret_anual >= m.cdi_anual ? 'pos':'neg'},
+    {t:'Saúde do fundo',     v: ddAberto ? 'Drawdown em aberto (' + fmtPct(m.max_dd) + ')' : 'Normal', sem: ddAberto ? 'amber':'green'},
+  ].map(s =>
+    '<div class="score-card"><div class="score-title">' + s.t + '</div>' +
+    (s.sem ?
+      '<div class="semaforo" style="margin-top:8px"><div class="sem-dot" style="background:' +
+      (s.sem==='green'?'#22c55e':'#f59e0b') + '"></div>' +
+      '<div class="sem-label" style="color:' + (s.sem==='green'?'#15803d':'#92400e') + ';font-size:13px">' +
+      (s.sem==='green'?'Normal':'Atenção') + '</div></div>' +
+      '<div class="score-sub" style="margin-top:4px">' + s.v + '</div>'
+      :
+      '<div class="score-val ' + (s.c||'') + '">' + s.v + '</div>'
+    ) +
+    '</div>'
+  ).join('');
+}
+
+function updateChartsFromAPI(cotas, metricas) {
+  // Cotas vêm em ordem DESC do banco — reverter
+  const sorted = [...cotas].reverse();
+  const labels = sorted.map(c => {
+    const d = new Date(c.data + 'T12:00:00');
+    return d.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
+  });
+  const cotaVals = sorted.map(c => parseFloat(c.cota));
+  const retVals  = sorted.map(c => c.retorno_dia ? parseFloat(c.retorno_dia) * 100 : 0);
+
+  // CDI acumulado sintético
+  const cdiVals = [1];
+  const cdiMonthly = metricas.cdi_monthly || {};
+  sorted.forEach((c, i) => {
+    if (i === 0) return;
+    const mes = c.data.substring(0, 7);
+    const diasMes = sorted.filter(x => x.data.startsWith(mes)).length;
+    const cdiM = cdiMonthly[mes] || 0.01;
+    const cdiD = Math.pow(1 + cdiM, 1/Math.max(diasMes,1)) - 1;
+    cdiVals.push(cdiVals[cdiVals.length-1] * (1 + cdiD));
+  });
+
+  // Drawdown
+  let peak = cotaVals[0];
+  const ddVals = cotaVals.map(c => {
+    if (c > peak) peak = c;
+    return ((c - peak) / peak) * 100;
+  });
+
+  // Retornos mensais
+  const monthly = metricas.monthly || {};
+  const monthlyKeys = Object.keys(monthly).sort();
+  const monthlyVals = monthlyKeys.map(k => monthly[k] * 100);
+  const cdiMVals = monthlyKeys.map(k => (metricas.cdi_monthly?.[k] || 0) * 100);
+
+  // Amostrar para não sobrecarregar os gráficos (máx 60 pontos)
+  const step = Math.max(1, Math.floor(sorted.length / 60));
+  const sampledLabels = labels.filter((_, i) => i % step === 0);
+  const sampledCota   = cotaVals.filter((_, i) => i % step === 0);
+  const sampledCDI    = cdiVals.filter((_, i) => i % step === 0);
+  const sampledDD     = ddVals.filter((_, i) => i % step === 0);
+
+  // Rebuild charts
+  ['chart-retorno','chart-dd','chart-mensal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el._chart) { el._chart.destroy(); el._chart = null; }
+  });
+
+  // Retorno acumulado
+  const ctxR = document.getElementById('chart-retorno');
+  if (ctxR) {
+    ctxR._chart = new Chart(ctxR, {type:'line', data:{
+      labels: sampledLabels,
+      datasets: [
+        {label:'Prospecta FIM', data: sampledCota.map(v=>(v-1)*100),
+         borderColor:'#0a0a0a', borderWidth:2, fill:false, tension:.3, pointRadius:0},
+        {label:'CDI', data: sampledCDI.map(v=>(v-1)*100),
+         borderColor:'#9a9a9a', borderWidth:1.5, borderDash:[4,3], fill:false, tension:.3, pointRadius:0}
+      ]
+    }, options:{responsive:true, plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%', font:{family:'Lora',size:10}}, grid:{color:'#f0f0f0'}},
+              x:{ticks:{font:{family:'Lora',size:10}, maxTicksLimit:10}, grid:{display:false}}}}});
+  }
+
+  // Drawdown
+  const ctxD = document.getElementById('chart-dd');
+  if (ctxD) {
+    ctxD._chart = new Chart(ctxD, {type:'line', data:{
+      labels: sampledLabels,
+      datasets: [{label:'Drawdown', data: sampledDD,
+        borderColor:'#9b1c1c', backgroundColor:'rgba(155,28,28,0.08)',
+        borderWidth:1.5, fill:true, tension:.3, pointRadius:0}]
+    }, options:{responsive:true, plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%', font:{family:'Lora',size:10}}, grid:{color:'#f0f0f0'}},
+              x:{ticks:{font:{family:'Lora',size:10}, maxTicksLimit:10}, grid:{display:false}}}}});
+  }
+
+  // Barras mensais
+  const ctxM = document.getElementById('chart-mensal');
+  if (ctxM) {
+    ctxM._chart = new Chart(ctxM, {type:'bar', data:{
+      labels: monthlyKeys.map(k => k.substring(0,7)),
+      datasets: [
+        {label:'Fundo', data: monthlyVals,
+         backgroundColor: monthlyVals.map(v=>v>=0?'rgba(10,10,10,0.8)':'rgba(155,28,28,0.7)'), borderRadius:2},
+        {label:'CDI',   data: cdiMVals,
+         backgroundColor:'rgba(154,154,154,0.4)', borderRadius:2}
+      ]
+    }, options:{responsive:true, plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%', font:{family:'Lora',size:10}}, grid:{color:'#f0f0f0'}},
+              x:{ticks:{font:{family:'Lora',size:9}}, grid:{display:false}}}}});
+  }
+
+  // Score chart
+  const ctxSc = document.getElementById('chart-score');
+  if (ctxSc && !ctxSc._chart) {
+    const vsCDI = monthlyKeys.map((k,i) => monthlyVals[i] - cdiMVals[i]);
+    ctxSc._chart = new Chart(ctxSc, {type:'bar', data:{
+      labels: monthlyKeys.map(k => k.substring(0,7)),
+      datasets:[{label:'vs CDI', data:vsCDI,
+        backgroundColor:vsCDI.map(v=>v>=0?'rgba(10,10,10,0.8)':'rgba(155,28,28,0.7)'), borderRadius:2}]
+    }, options:{responsive:true, plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%', font:{family:'Lora',size:10}}, grid:{color:'#f0f0f0'}},
+              x:{ticks:{font:{family:'Lora',size:9}}, grid:{display:false}}}}});
+  }
+}
+
 // ── DADOS ──
 const CARTEIRA = [
   {a:"LFT 2031",t:"Tesouro",p:0.240,k:"LFT 2031",cls:"RF Brasil"},
@@ -1024,6 +1266,8 @@ function renderAll(){
   document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   document.getElementById('r-data').value=new Date().toISOString().split('T')[0];
   document.getElementById('pd-prazo').value=new Date().toISOString().split('T')[0];
+  // Carrega dados da API em background
+  loadFromAPI();
 }
 
 function updateBadges(){
