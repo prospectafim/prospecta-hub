@@ -386,6 +386,7 @@ document.addEventListener('DOMContentLoaded',function(){
     </div>
     <div class="sb-section">
       <div class="sb-label">Sistema</div>
+      <div class="nav-item" onclick="showPage('analise',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg><span>Análise por Período</span></div>
       <div class="nav-item" onclick="showPage('scorecard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Scorecard</span></div>
       <div class="nav-item" onclick="showPage('faq',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>FAQ / Manual</span></div>
     </div>
@@ -669,6 +670,78 @@ document.addEventListener('DOMContentLoaded',function(){
         <div class="cal-day-name">Qua</div><div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div><div class="cal-day-name">Sáb</div>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- ANÁLISE POR PERÍODO -->
+    <div id="page-analise" class="page">
+      <div class="sec-title">Análise por Período</div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr"><div class="card-title">Selecione o período</div></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <div class="form-label">Modo</div>
+            <select id="ap-modo" onchange="toggleModoAnalise()" style="width:160px">
+              <option value="mes">Mês específico</option>
+              <option value="periodo">Período livre</option>
+            </select>
+          </div>
+          <div id="ap-mes-wrap">
+            <div class="form-label">Mês</div>
+            <select id="ap-mes" style="width:160px">
+              <option value="2026-07">Jul/2026</option>
+              <option value="2026-06">Jun/2026</option>
+              <option value="2026-05">Mai/2026</option>
+              <option value="2026-04">Abr/2026</option>
+              <option value="2026-03">Mar/2026</option>
+              <option value="2026-02">Fev/2026</option>
+              <option value="2026-01">Jan/2026</option>
+              <option value="2025-12">Dez/2025</option>
+              <option value="2025-11">Nov/2025</option>
+              <option value="2025-10">Out/2025</option>
+              <option value="2025-09">Set/2025</option>
+              <option value="2025-08">Ago/2025</option>
+              <option value="2025-07">Jul/2025</option>
+              <option value="2025-06">Jun/2025</option>
+              <option value="2025-05">Mai/2025</option>
+            </select>
+          </div>
+          <div id="ap-periodo-wrap" style="display:none;gap:10px;align-items:flex-end">
+            <div>
+              <div class="form-label">De</div>
+              <input type="date" id="ap-inicio" style="width:150px">
+            </div>
+            <div>
+              <div class="form-label">Até</div>
+              <input type="date" id="ap-fim" style="width:150px">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="analisarPeriodo()">Analisar</button>
+        </div>
+      </div>
+
+      <div id="ap-resultado" style="display:none">
+        <div class="kpi-grid" id="ap-kpis" style="margin-bottom:16px"></div>
+        <div class="grid-2">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">Retorno diário no período</div></div>
+            <canvas id="ap-chart-retorno" height="150"></canvas>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">Detalhamento diário</div></div>
+            <div id="ap-tabela" style="max-height:280px;overflow-y:auto">
+              <table>
+                <thead><tr><th>Data</th><th>Cota</th><th>Retorno</th><th>vs CDI</th></tr></thead>
+                <tbody id="ap-tabela-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ap-empty" style="text-align:center;padding:40px;color:var(--g400);font-size:13px">
+        Selecione um período e clique em Analisar.
+      </div>
     </div>
 
     <!-- SCORECARD -->
@@ -969,12 +1042,24 @@ async function loadFromAPI() {
   // ── Atualiza KPIs do Dashboard ──
   const kpiGrid = document.getElementById('kpi-grid');
   if (kpiGrid && metricas.cota_atual) {
-    const ret_mes = metricas.monthly ? Object.values(metricas.monthly).slice(-1)[0] : null;
+    // Pega o último mês com retorno != 0 (ignora dias zerados)
+    const monthly = metricas.monthly || {};
+    const monthlyEntries = Object.entries(monthly).filter(([k,v]) => Math.abs(v) > 0.0001);
+    const lastEntry = monthlyEntries.slice(-1)[0];
+    const ret_mes = lastEntry ? lastEntry[1] : null;
+    const mes_label = lastEntry ? lastEntry[0] : '';
+    // Usa a última cota real (não zerada) da série de cotas
+    const cotasReais = (cotas || []).filter(c => c.retorno_dia !== 0 || c.data === metricas.data_inicio);
+    const ultimaCotaReal = cotasReais.length > 0 ? cotasReais[0] : null;
+    const cotaExibir = ultimaCotaReal ? ultimaCotaReal.cota : metricas.cota_atual;
+    const plExibir = ultimaCotaReal ? ultimaCotaReal.pl : metricas.pl_atual;
+    const dataExibir = ultimaCotaReal ? ultimaCotaReal.data : metricas.data_atual;
+    const dataAtual = dataExibir ? new Date(dataExibir + 'T12:00:00').toLocaleDateString('pt-BR', {month:'short', year:'2-digit'}) : '';
     const kpis = [
-      {l:'Cota atual',       v: metricas.cota_atual.toFixed(6),            sub:'base 1,0 em abr/25'},
-      {l:'Retorno mês',      v: ret_mes ? fmtPct(ret_mes) : '—',           sub: Object.keys(metricas.monthly||{}).slice(-1)[0]||'', neg: ret_mes < 0, pos: ret_mes >= 0},
+      {l:'Cota atual',       v: (cotaExibir||metricas.cota_atual||0).toFixed(6), sub:'base 1,0 em abr/25'},
+      {l:'Retorno mês',      v: ret_mes ? fmtPct(ret_mes) : '—',           sub: mes_label, neg: ret_mes < 0, pos: ret_mes >= 0},
       {l:'Retorno acumulado',v: fmtPct(metricas.ret_total),                sub:'desde abr/25', pos: metricas.ret_total >= 0, neg: metricas.ret_total < 0},
-      {l:'PL estimado',      v: fmtPL(metricas.pl_atual),                  sub: metricas.data_atual||''},
+      {l:'PL estimado',      v: fmtPL(plExibir||metricas.pl_atual),         sub: dataAtual},
       {l:'Vol anualizada',   v: fmtPct(metricas.vol_anual),                sub:'histórica'},
       {l:'Máx drawdown',     v: fmtPct(metricas.max_dd),                   sub: metricas.peak_date||'', neg: true},
     ];
@@ -1297,7 +1382,7 @@ async function save(key,data){ try{await window.storage.set(key,JSON.stringify(d
 function renderAll(){
   renderCarteira(); renderComite(); renderTeses(); renderFAQ();
   renderTrainees(); renderPendings(); updateBadges();
-  initCharts(); initSimulador(); renderCalendario();
+  initSimulador(); renderCalendario();
   document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   document.getElementById('r-data').value=new Date().toISOString().split('T')[0];
   document.getElementById('pd-prazo').value=new Date().toISOString().split('T')[0];
@@ -1315,7 +1400,7 @@ function updateBadges(){
 }
 
 // ── NAV ──
-const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',scorecard:'Scorecard do Fundo',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
+const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',scorecard:'Scorecard do Fundo',analise:'Análise por Período',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
 function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1323,7 +1408,10 @@ function showPage(id,el){
   if(el) el.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
   document.getElementById('topbar-title').textContent=TITLES[id]||id;
-  if(id==='performance') setTimeout(initCharts,100);
+  if(id==='performance') setTimeout(loadFromAPI,100);
+  if(id==='dashboard') setTimeout(loadFromAPI,100);
+  if(id==='analise'){ const d=new Date(); document.getElementById('ap-fim').value=d.toISOString().split('T')[0]; const s=new Date(d.getFullYear(),d.getMonth(),1); document.getElementById('ap-inicio').value=s.toISOString().split('T')[0]; }
+  if(id==='scorecard') setTimeout(loadFromAPI,100);
   if(id==='scorecard') setTimeout(initScoreChart,100);
   if(id==='simulador') setTimeout(initSimulador,100);
 }
@@ -1770,6 +1858,123 @@ async function loadCustomFaqs() {
   return [];
 }
 
+// ── ANÁLISE POR PERÍODO ──
+function toggleModoAnalise() {
+  const modo = document.getElementById('ap-modo').value;
+  document.getElementById('ap-mes-wrap').style.display = modo === 'mes' ? '' : 'none';
+  document.getElementById('ap-periodo-wrap').style.display = modo === 'periodo' ? 'flex' : 'none';
+}
+
+async function analisarPeriodo() {
+  const modo = document.getElementById('ap-modo').value;
+  let inicio, fim;
+
+  if (modo === 'mes') {
+    const mes = document.getElementById('ap-mes').value;
+    const [ano, m] = mes.split('-').map(Number);
+    inicio = mes + '-01';
+    const lastDay = new Date(ano, m, 0).getDate();
+    fim = mes + '-' + String(lastDay).padStart(2,'0');
+  } else {
+    inicio = document.getElementById('ap-inicio').value;
+    fim    = document.getElementById('ap-fim').value;
+    if (!inicio || !fim) { alert('Preencha as duas datas.'); return; }
+  }
+
+  const cotas = await apiFetch('/api/cotas?limit=500');
+  const metricas = await apiFetch('/api/metricas');
+  if (!cotas || !metricas) { alert('Erro ao buscar dados.'); return; }
+
+  // Filtra cotas do período
+  const sorted = [...cotas].reverse();
+  const periodo = sorted.filter(c => c.data >= inicio && c.data <= fim);
+
+  if (periodo.length === 0) {
+    alert('Nenhum dado encontrado para esse período.');
+    return;
+  }
+
+  // ── Métricas do período ──
+  const cotaIni = periodo[0].cota;
+  const cotaFim = periodo[periodo.length-1].cota;
+  const retorno = (cotaFim / cotaIni) - 1;
+  const rets = periodo.filter(c => c.retorno_dia).map(c => parseFloat(c.retorno_dia));
+  const volD = rets.length > 1 ? Math.sqrt(rets.reduce((s,r) => s + Math.pow(r - rets.reduce((a,b)=>a+b,0)/rets.length, 2), 0) / (rets.length-1)) : 0;
+  const volA = volD * Math.sqrt(252);
+  const melhor = rets.length ? Math.max(...rets) : 0;
+  const pior   = rets.length ? Math.min(...rets) : 0;
+  const diasPos = rets.filter(r => r > 0).length;
+
+  // CDI do período
+  const cdiMonthly = metricas.cdi_monthly || {};
+  let cdiPeriodo = 0;
+  const mesesPeriodo = [...new Set(periodo.map(c => c.data.substring(0,7)))];
+  mesesPeriodo.forEach(m => {
+    const cdiM = cdiMonthly[m] || 0;
+    const diasMes = periodo.filter(c => c.data.startsWith(m)).length;
+    const totalDiasMes = sorted.filter(c => c.data.startsWith(m)).length || 1;
+    cdiPeriodo += cdiM * (diasMes / totalDiasMes);
+  });
+  const alpha = retorno - cdiPeriodo;
+
+  // ── Render KPIs ──
+  const kpiEl = document.getElementById('ap-kpis');
+  kpiEl.innerHTML = [
+    {l:'Retorno no período', v: fmtPct(retorno),    c: retorno >= 0 ? 'pos':'neg'},
+    {l:'CDI no período',     v: fmtPct(cdiPeriodo), c:''},
+    {l:'Alpha',              v: fmtPct(alpha),       c: alpha >= 0 ? 'pos':'neg'},
+    {l:'Vol anualizada',     v: fmtPct(volA),        c:''},
+    {l:'Melhor dia',         v: fmtPct(melhor),      c:'pos'},
+    {l:'Pior dia',           v: fmtPct(pior),        c:'neg'},
+    {l:'Dias positivos',     v: diasPos + ' de ' + rets.length, c:''},
+    {l:'Cota inicial',       v: cotaIni.toFixed(6),  c:''},
+    {l:'Cota final',         v: cotaFim.toFixed(6),  c:''},
+  ].map(k => '<div class="kpi-card"><div class="kpi-label">' + k.l + '</div><div class="kpi-val ' + k.c + '">' + k.v + '</div></div>').join('');
+
+  // ── Render tabela ──
+  const tbody = document.getElementById('ap-tabela-body');
+  tbody.innerHTML = [...periodo].reverse().map(c => {
+    const ret = parseFloat(c.retorno_dia||0);
+    const cdiDia = cdiPeriodo / Math.max(periodo.length,1);
+    const vs = ret - cdiDia;
+    return '<tr>' +
+      '<td>' + c.data + '</td>' +
+      '<td style="font-family:var(--serif);font-weight:700">' + parseFloat(c.cota).toFixed(6) + '</td>' +
+      '<td style="color:' + (ret>=0?'var(--green)':'var(--red)') + ';font-weight:500">' + fmtPct(ret) + '</td>' +
+      '<td style="color:' + (vs>=0?'var(--green)':'var(--red)') + '">' + fmtPct(vs) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // ── Render gráfico ──
+  const ctx = document.getElementById('ap-chart-retorno');
+  if (ctx._chart) { ctx._chart.destroy(); ctx._chart = null; }
+  const labels = periodo.map(c => c.data.substring(5));
+  const retDiario = periodo.map(c => (parseFloat(c.retorno_dia||0)*100).toFixed(3));
+  ctx._chart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Retorno diário (%)',
+        data: retDiario,
+        backgroundColor: retDiario.map(v => parseFloat(v)>=0 ? 'rgba(10,10,10,0.8)':'rgba(155,28,28,0.7)'),
+        borderRadius:2
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{ticks:{callback:v=>v+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},
+        x:{ticks:{font:{family:'Lora',size:9},maxTicksLimit:15},grid:{display:false}}
+      }
+    }
+  });
+
+  document.getElementById('ap-resultado').style.display = 'block';
+  document.getElementById('ap-empty').style.display = 'none';
+}
+
 function toggleFaq(i){
   const a=document.getElementById('faq-a-'+i);
   const ch=document.getElementById('faq-ch-'+i);
@@ -1788,6 +1993,11 @@ if(document.readyState==='loading'){
 } else {
   loadStorage();
 }
+
+// Auto-refresh API data every 5 minutes
+setInterval(function(){
+  loadFromAPI();
+}, 5 * 60 * 1000);
 </script>
 </div><!-- /app-root -->
 </body>
