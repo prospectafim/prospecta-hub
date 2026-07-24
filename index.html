@@ -415,13 +415,13 @@ document.addEventListener('DOMContentLoaded',function(){
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
-      <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Cota atual</div><div class="kpi-val">1,135355</div><div class="kpi-sub">base 1,0 em abr/25</div></div>
-        <div class="kpi-card"><div class="kpi-label">Retorno mês</div><div class="kpi-val neg">−0,65%</div><div class="kpi-sub">mai/26</div></div>
-        <div class="kpi-card"><div class="kpi-label">Retorno acumulado</div><div class="kpi-val pos">+13,54%</div><div class="kpi-sub">desde abr/25</div></div>
-        <div class="kpi-card"><div class="kpi-label">PL estimado</div><div class="kpi-val">R$ 11,35M</div><div class="kpi-sub">mai/26</div></div>
-        <div class="kpi-card"><div class="kpi-label">Vol anualizada</div><div class="kpi-val">7,60%</div><div class="kpi-sub">histórica</div></div>
-        <div class="kpi-card"><div class="kpi-label">Máx drawdown</div><div class="kpi-val neg">−6,86%</div><div class="kpi-sub">jan–mar/26</div></div>
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Cota atual</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
+        <div class="kpi-card"><div class="kpi-label">Retorno mês</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
+        <div class="kpi-card"><div class="kpi-label">Retorno acumulado</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
+        <div class="kpi-card"><div class="kpi-label">PL estimado</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
+        <div class="kpi-card"><div class="kpi-label">Vol anualizada</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
+        <div class="kpi-card"><div class="kpi-label">Máx drawdown</div><div class="kpi-val" style="color:var(--g300)">...</div><div class="kpi-sub">carregando</div></div>
       </div>
       <div class="grid-2" style="margin-bottom:14px">
         <div class="card" style="margin-bottom:0">
@@ -1042,26 +1042,34 @@ async function loadFromAPI() {
   // ── Atualiza KPIs do Dashboard ──
   const kpiGrid = document.getElementById('kpi-grid');
   if (kpiGrid && metricas.cota_atual) {
-    // Pega o último mês com retorno != 0 (ignora dias zerados)
-    const monthly = metricas.monthly || {};
-    const monthlyEntries = Object.entries(monthly).filter(([k,v]) => Math.abs(v) > 0.0001);
-    const lastEntry = monthlyEntries.slice(-1)[0];
-    const ret_mes = lastEntry ? lastEntry[1] : null;
-    const mes_label = lastEntry ? lastEntry[0] : '';
-    // Usa a última cota real (não zerada) da série de cotas
-    const cotasReais = (cotas || []).filter(c => c.retorno_dia !== 0 || c.data === metricas.data_inicio);
+    // Pega a última cota real (retorno != 0) da série de cotas
+    const cotasReais = (cotas || []).filter(c => c.retorno_dia && Math.abs(parseFloat(c.retorno_dia)) > 0.000001);
     const ultimaCotaReal = cotasReais.length > 0 ? cotasReais[0] : null;
     const cotaExibir = ultimaCotaReal ? ultimaCotaReal.cota : metricas.cota_atual;
     const plExibir = ultimaCotaReal ? ultimaCotaReal.pl : metricas.pl_atual;
     const dataExibir = ultimaCotaReal ? ultimaCotaReal.data : metricas.data_atual;
     const dataAtual = dataExibir ? new Date(dataExibir + 'T12:00:00').toLocaleDateString('pt-BR', {month:'short', year:'2-digit'}) : '';
+
+    // Calcula retorno do mês corrente usando as cotas reais
+    const mesAtual = dataExibir ? dataExibir.substring(0,7) : '';
+    const cotasMesAtual = (cotas||[]).filter(c => c.data.startsWith(mesAtual) && c.retorno_dia && Math.abs(parseFloat(c.retorno_dia)) > 0.000001);
+    const cotasMesOrdenadas = [...(cotas||[])].reverse().filter(c => c.data.startsWith(mesAtual));
+    // Pega cota do último dia do mes anterior para calcular retorno do mes
+    const sorted = [...(cotas||[])].reverse();
+    const idxMesAtual = sorted.findIndex(c => c.data.startsWith(mesAtual));
+    const cotaInicioMes = idxMesAtual > 0 ? parseFloat(sorted[idxMesAtual-1].cota) : parseFloat(cotaExibir);
+    const ret_mes = cotaInicioMes > 0 ? (parseFloat(cotaExibir) / cotaInicioMes - 1) : null;
+    const mes_label = mesAtual;
+    // Formata datas legíveis
+    const fmtMes = m => { if(!m) return ''; const [y,mo] = m.split('-'); const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return meses[parseInt(mo)-1]+'/'+y.slice(2); };
+    const fmtData = d => { if(!d) return ''; const dt = new Date(d+'T12:00:00'); return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'2-digit'}); };
     const kpis = [
-      {l:'Cota atual',       v: (cotaExibir||metricas.cota_atual||0).toFixed(6), sub:'base 1,0 em abr/25'},
-      {l:'Retorno mês',      v: ret_mes ? fmtPct(ret_mes) : '—',           sub: mes_label, neg: ret_mes < 0, pos: ret_mes >= 0},
-      {l:'Retorno acumulado',v: fmtPct(metricas.ret_total),                sub:'desde abr/25', pos: metricas.ret_total >= 0, neg: metricas.ret_total < 0},
-      {l:'PL estimado',      v: fmtPL(plExibir||metricas.pl_atual),         sub: dataAtual},
-      {l:'Vol anualizada',   v: fmtPct(metricas.vol_anual),                sub:'histórica'},
-      {l:'Máx drawdown',     v: fmtPct(metricas.max_dd),                   sub: metricas.peak_date||'', neg: true},
+      {l:'Cota do fundo',    v: (cotaExibir||metricas.cota_atual||0).toFixed(6), sub:'iniciou em 1,0 em abr/25'},
+      {l:'Retorno — ' + fmtMes(mes_label), v: ret_mes ? fmtPct(ret_mes) : '—', sub: fmtData(dataExibir), neg: ret_mes < 0, pos: ret_mes >= 0},
+      {l:'Retorno acumulado',v: fmtPct(metricas.ret_total), sub:'desde abr/25 · ' + fmtData(dataExibir), pos: metricas.ret_total >= 0, neg: metricas.ret_total < 0},
+      {l:'PL estimado',      v: fmtPL(plExibir||metricas.pl_atual), sub: fmtData(dataExibir)},
+      {l:'Vol anualizada',   v: fmtPct(metricas.vol_anual), sub:'desvio padrão × √252'},
+      {l:'Máx drawdown',     v: fmtPct(metricas.max_dd), sub:'pico: ' + fmtMes((metricas.peak_date||'').substring(0,7)), neg: true},
     ];
     kpiGrid.innerHTML = kpis.map(k =>
       '<div class="kpi-card">' +
