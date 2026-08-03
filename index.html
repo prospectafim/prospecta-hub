@@ -659,175 +659,35 @@ document.addEventListener('DOMContentLoaded',function(){
         <div class="cal-month-title" id="cal-title"></div>
         <button class="btn btn-secondary btn-sm" onclick="calNav(1)">Próximo →</button>
       </div>
+
       <div class="cal-legend">
         <div class="leg-item"><div class="leg-dot ev-us"></div>EUA</div>
         <div class="leg-item"><div class="leg-dot ev-br"></div>Brasil</div>
-        <div class="leg-item"><div class="leg-dot ev-eu"></div>Zona do Euro</div>
+        <div class="leg-item"><div class="leg-dot ev-eu"></div>Europa</div>
         <div class="leg-item"><div class="leg-dot ev-jp"></div>Japão</div>
         <div class="leg-item"><div class="leg-dot ev-fund"></div>Fundo</div>
-        <div class="leg-item" style="margin-left:auto"><a href="https://investing.com/economic-calendar" target="_blank" style="font-size:11px;color:var(--g400);text-decoration:none">Ver calendário completo → Investing.com</a></div>
+        <div id="cal-loading" style="margin-left:auto;font-size:11px;color:var(--g400)"></div>
       </div>
+
       <div class="cal-header">
-        <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div><div class="cal-day-name">Ter</div>
-        <div class="cal-day-name">Qua</div><div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div><div class="cal-day-name">Sáb</div>
+        <div class="cal-day-name">Dom</div><div class="cal-day-name">Seg</div>
+        <div class="cal-day-name">Ter</div><div class="cal-day-name">Qua</div>
+        <div class="cal-day-name">Qui</div><div class="cal-day-name">Sex</div>
+        <div class="cal-day-name">Sáb</div>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
-    </div>
 
-    <!-- ANÁLISE POR PERÍODO -->
-    <div id="page-analise" class="page">
-      <div class="sec-title">Análise por Período</div>
-
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-hdr"><div class="card-title">Selecione o período</div></div>
-        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-          <div>
-            <div class="form-label">Modo</div>
-            <select id="ap-modo" onchange="toggleModoAnalise()" style="width:160px">
-              <option value="mes">Mês específico</option>
-              <option value="periodo">Período livre</option>
-            </select>
+      <!-- Detalhe do dia (clique) -->
+      <div id="cal-day-detail" style="display:none;margin-top:14px">
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title" id="cal-detail-title">Eventos do dia</div>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('cal-day-detail').style.display='none'">✕</button>
           </div>
-          <div id="ap-mes-wrap">
-            <div class="form-label">Mês</div>
-            <select id="ap-mes" style="width:160px">
-              <option value="2026-07">Jul/2026</option>
-              <option value="2026-06">Jun/2026</option>
-              <option value="2026-05">Mai/2026</option>
-              <option value="2026-04">Abr/2026</option>
-              <option value="2026-03">Mar/2026</option>
-              <option value="2026-02">Fev/2026</option>
-              <option value="2026-01">Jan/2026</option>
-              <option value="2025-12">Dez/2025</option>
-              <option value="2025-11">Nov/2025</option>
-              <option value="2025-10">Out/2025</option>
-              <option value="2025-09">Set/2025</option>
-              <option value="2025-08">Ago/2025</option>
-              <option value="2025-07">Jul/2025</option>
-              <option value="2025-06">Jun/2025</option>
-              <option value="2025-05">Mai/2025</option>
-            </select>
-          </div>
-          <div id="ap-periodo-wrap" style="display:none;gap:10px;align-items:flex-end">
-            <div>
-              <div class="form-label">De</div>
-              <input type="date" id="ap-inicio" style="width:150px">
-            </div>
-            <div>
-              <div class="form-label">Até</div>
-              <input type="date" id="ap-fim" style="width:150px">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="analisarPeriodo()">Analisar</button>
-        </div>
-      </div>
-
-      <div id="ap-resultado" style="display:none">
-        <div class="kpi-grid" id="ap-kpis" style="margin-bottom:16px"></div>
-        <div class="grid-2">
-          <div class="card" style="margin-bottom:0">
-            <div class="card-hdr"><div class="card-title">Retorno diário no período</div></div>
-            <canvas id="ap-chart-retorno" height="150"></canvas>
-          </div>
-          <div class="card" style="margin-bottom:0">
-            <div class="card-hdr"><div class="card-title">Detalhamento diário</div></div>
-            <div id="ap-tabela" style="max-height:280px;overflow-y:auto">
-              <table>
-                <thead><tr><th>Data</th><th>Cota</th><th>Retorno</th><th>vs CDI</th></tr></thead>
-                <tbody id="ap-tabela-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="ap-empty" style="text-align:center;padding:40px;color:var(--g400);font-size:13px">
-        Selecione um período e clique em Analisar.
-      </div>
-    </div>
-
-    <!-- MACRO DATA -->
-    <div id="page-macrodata" class="page">
-      <div class="sec-title">Dados Macro — Últimas Divulgações</div>
-
-      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
-        <button class="btn btn-primary btn-sm" onclick="loadMacroData()">↻ Atualizar</button>
-        <span id="macro-last-update" style="font-size:11px;color:var(--g400)"></span>
-      </div>
-
-      <div class="grid-2">
-        <!-- EUA -->
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <div style="font-family:var(--serif);font-size:14px;font-weight:700">🇺🇸 Estados Unidos</div>
-            <div id="eua-status" style="font-size:11px;color:var(--g400)"></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Política Monetária</div></div>
-            <div id="eua-monetaria"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Mercado de Trabalho</div></div>
-            <div id="eua-trabalho"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Inflação e Consumo</div></div>
-            <div id="eua-inflacao"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:0">
-            <div class="card-hdr"><div class="card-title">Atividade (PMI / ISM)</div></div>
-            <div id="eua-atividade"><div class="empty" style="padding:12px"><p>Inserção manual — PMI S&P Global não tem API pública.</p></div></div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input type="number" id="pmi-mfg-val" placeholder="ISM Mfg" step="0.1" style="width:90px">
-              <input type="text" id="pmi-mfg-date" placeholder="MM/AAAA" style="width:90px">
-              <input type="number" id="pmi-svc-val" placeholder="ISM Svc" step="0.1" style="width:90px">
-              <button class="btn btn-secondary btn-sm" onclick="savePMI_EUA()">Salvar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- BRASIL -->
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <div style="font-family:var(--serif);font-size:14px;font-weight:700">🇧🇷 Brasil</div>
-            <div id="br-status" style="font-size:11px;color:var(--g400)"></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Política Monetária</div></div>
-            <div id="br-monetaria"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Inflação</div></div>
-            <div id="br-inflacao"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:12px">
-            <div class="card-hdr"><div class="card-title">Atividade</div></div>
-            <div id="br-atividade"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
-          </div>
-
-          <div class="card" style="margin-bottom:0">
-            <div class="card-hdr"><div class="card-title">PMI / PMC / PMS (S&P Global + IBGE)</div></div>
-            <div id="br-pmi"><div class="empty" style="padding:12px"><p>Inserção manual — PMI S&P Global não tem API pública.</p></div></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
-              <input type="number" id="pmi-br-mfg" placeholder="PMI Industrial" step="0.1">
-              <input type="number" id="pmi-br-svc" placeholder="PMI Serviços" step="0.1">
-              <input type="number" id="pmc-val" placeholder="PMC (var. %)" step="0.01">
-              <input type="number" id="pms-val" placeholder="PMS (var. %)" step="0.01">
-              <input type="text" id="pmi-br-date" placeholder="MM/AAAA" style="grid-column:1/-1">
-            </div>
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px;width:100%" onclick="savePMI_BR()">Salvar PMIs Brasil</button>
-          </div>
+          <div id="cal-detail-body"></div>
         </div>
       </div>
     </div>
-
     <!-- SCORECARD -->
     <div id="page-scorecard" class="page">
       <div class="sec-title">Scorecard do fundo</div>
@@ -1621,36 +1481,119 @@ function resetSim(){
   renderSimInputs();
 }
 
-// ── CALENDÁRIO ──
-const MESES_PT=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+// ── CALENDÁRIO MACRO ──
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+const FMP_KEY = 'bkn4DsEhgxgU9LhTVL7TpKYoHJMT1XWZ';
+const calCache = {};
+const FUND_EVENTS = {
+  '2026-08-13': [{t:'ev-fund', n:'Vencimento JAPQ26 (USD/JPY)'}],
+};
+
+async function fetchCalendarEvents(year, month) {
+  const key = `${year}-${String(month+1).padStart(2,'0')}`;
+  if (calCache[key]) return calCache[key];
+  const from = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const lastDay = new Date(year, month+1, 0).getDate();
+  const to = `${year}-${String(month+1).padStart(2,'0')}-${lastDay}`;
+  const el = document.getElementById('cal-loading');
+  if (el) el.textContent = 'Buscando eventos...';
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/economic_calendar?from=${from}&to=${to}&apikey=${FMP_KEY}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const data = await r.json();
+    const COUNTRY_CLASS = {'US':'ev-us','BR':'ev-br','EU':'ev-eu','DE':'ev-eu','FR':'ev-eu','GB':'ev-eu','JP':'ev-jp'};
+    const HIGH_IMPACT = ['nonfarm','payroll','cpi','inflation','gdp','fed','fomc','rate decision','unemployment','jolts','retail sales','adp','hourly earnings','ism','pmi','pms','pmc','ibc','caged','ipca','selic','copom','ecb','boe','boj','interest rate','core','ppi','consumer','manufacturing','services'];
+    const events = {};
+    (Array.isArray(data)?data:[]).forEach(ev=>{
+      const dateKey = ev.date?ev.date.substring(0,10):null;
+      if (!dateKey) return;
+      const cls = COUNTRY_CLASS[ev.country||''];
+      if (!cls) return;
+      const nameLower = (ev.event||'').toLowerCase();
+      const isRelevant = HIGH_IMPACT.some(k=>nameLower.includes(k));
+      if (!isRelevant && ev.impact !== 'High') return;
+      if (!events[dateKey]) events[dateKey]=[];
+      let display = ev.event||'';
+      if (display.length>32) display=display.substring(0,30)+'…';
+      events[dateKey].push({t:cls,n:display,full:ev.event,actual:ev.actual,previous:ev.previous,estimate:ev.estimate,impact:ev.impact,country:ev.country});
+    });
+    Object.entries(FUND_EVENTS).forEach(([date,evs])=>{
+      if(date.startsWith(key)){if(!events[date])events[date]=[];events[date]=[...events[date],...evs];}
+    });
+    calCache[key]=events;
+    const total=Object.values(events).flat().length;
+    if(el) el.textContent=total>0?`${total} eventos`:'Nenhum evento relevante encontrado';
+    return events;
+  } catch(e) {
+    console.warn('FMP Calendar:',e);
+    if(el) el.textContent='Sem dados externos — exibindo eventos do fundo';
+    const fallback={};
+    Object.entries(FUND_EVENTS).forEach(([date,evs])=>{if(date.startsWith(key))fallback[date]=evs;});
+    calCache[key]=fallback;
+    return fallback;
+  }
+}
+
 function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendario();}
 
-function renderCalendario(){
+async function renderCalendario(){
   document.getElementById('cal-title').textContent=MESES_PT[calMonth]+' de '+calYear;
   const grid=document.getElementById('cal-grid');
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--g400);font-size:12px">Carregando calendário...</div>';
+  const events=await fetchCalendarEvents(calYear,calMonth);
   const first=new Date(calYear,calMonth,1).getDay();
   const days=new Date(calYear,calMonth+1,0).getDate();
   const prevDays=new Date(calYear,calMonth,0).getDate();
   const today=new Date();
   let cells='';
-  for(let i=0;i<first;i++){
-    const d=prevDays-first+1+i;
-    cells+=`<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;
-  }
+  for(let i=0;i<first;i++){const d=prevDays-first+1+i;cells+=`<div class="cal-cell other-month"><div class="cal-date">${d}</div></div>`;}
   for(let d=1;d<=days;d++){
     const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
-    const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const evs=EVENTS_2026[key]||[];
-    const hasEv=evs.length>0;
-    cells+=`<div class="cal-cell${isToday?' today':''}${hasEv?' has-event':''}">
-      <div class="cal-date">${d}</div>
-      ${evs.map(e=>`<div class="cal-event ${e.t}" title="${e.n}">${e.n}</div>`).join('')}
-    </div>`;
+    const dateKey=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvs=events[dateKey]||[];
+    const hasEv=dayEvs.length>0;
+    const evHtml=dayEvs.slice(0,3).map(e=>`<div class="cal-event ${e.t}" title="${e.full||e.n}">${e.n}</div>`).join('');
+    const moreHtml=dayEvs.length>3?`<div class="cal-event ev-fund">+${dayEvs.length-3} mais</div>`:'';
+    const evJson=hasEv?JSON.stringify(dayEvs).replace(/'/g,'&#39;').replace(/"/g,'&quot;'):'';
+    const clickable=hasEv?`onclick="showDayDetail('${dateKey}',decodeEvs(this))" data-evs="${evJson}" style="cursor:pointer"`:'';
+    cells+=`<div class="cal-cell${isToday?' today':''}${hasEv?' has-event':''}" ${clickable}><div class="cal-date">${d}</div>${evHtml}${moreHtml}</div>`;
   }
-  const total=first+days;
-  const remaining=(7-total%7)%7;
-  for(let i=1;i<=remaining;i++) cells+=`<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
+  const total=first+days;const remaining=(7-total%7)%7;
+  for(let i=1;i<=remaining;i++)cells+=`<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
   grid.innerHTML=cells;
+}
+
+function decodeEvs(el){
+  try{return JSON.parse(el.dataset.evs);}catch(e){return [];}
+}
+
+function showDayDetail(dateKey,evs){
+  const detail=document.getElementById('cal-day-detail');
+  const title=document.getElementById('cal-detail-title');
+  const body=document.getElementById('cal-detail-body');
+  const[y,m,d]=dateKey.split('-');
+  title.textContent=`Eventos — ${d}/${m}/${y}`;
+  const CNAMES={'US':'EUA','BR':'Brasil','EU':'Europa','DE':'Alemanha','FR':'França','GB':'Reino Unido','JP':'Japão'};
+  const ICOLORS={'High':'var(--red)','Medium':'var(--amber)','Low':'var(--g400)'};
+  body.innerHTML=evs.map(ev=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100)">
+      <div style="min-width:60px">
+        <span class="pill ${ev.t||'ev-fund'}" style="font-size:10px">${CNAMES[ev.country||''||'']}||${ev.country||'Fundo'}</span>
+        ${ev.impact?`<div style="font-size:10px;color:${ICOLORS[ev.impact]||'var(--g400)'};margin-top:2px">${ev.impact}</div>`:''}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;font-family:var(--serif)">${ev.full||ev.n}</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:3px;display:flex;gap:12px">
+          ${ev.actual!=null?`<span>Real: <strong style="color:var(--black)">${ev.actual}</strong></span>`:''}
+          ${ev.estimate!=null?`<span>Estim: ${ev.estimate}</span>`:''}
+          ${ev.previous!=null?`<span>Ant: ${ev.previous}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+  detail.style.display='block';
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 // ── COMITE ──
