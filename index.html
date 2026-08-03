@@ -377,6 +377,7 @@ document.addEventListener('DOMContentLoaded',function(){
       <div class="nav-item" onclick="showPage('carta',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Carta do Gestor</span></div>
       <div class="nav-item" onclick="showPage('simulador',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg><span>Simulador</span></div>
       <div class="nav-item" onclick="showPage('calendario',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendário Macro</span></div>
+      <div class="nav-item" onclick="showPage('macrodata',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Dados Macro</span></div>
     </div>
     <div class="sb-section">
       <div class="sb-label">Equipe</div>
@@ -433,6 +434,7 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">8,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">SMAL11</div><div class="deriv-meta">Entrada 29/05/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">2,5%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">USD/JPY (JAPQ26)</div><div class="deriv-meta">Entrada 30/07/2026 · ref. 159,82 · venc. 13/08</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">10,0%</div></div></div>
         </div>
       </div>
       <div class="grid-2">
@@ -741,6 +743,88 @@ document.addEventListener('DOMContentLoaded',function(){
 
       <div id="ap-empty" style="text-align:center;padding:40px;color:var(--g400);font-size:13px">
         Selecione um período e clique em Analisar.
+      </div>
+    </div>
+
+    <!-- MACRO DATA -->
+    <div id="page-macrodata" class="page">
+      <div class="sec-title">Dados Macro — Últimas Divulgações</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="loadMacroData()">↻ Atualizar</button>
+        <span id="macro-last-update" style="font-size:11px;color:var(--g400)"></span>
+      </div>
+
+      <div class="grid-2">
+        <!-- EUA -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="font-family:var(--serif);font-size:14px;font-weight:700">🇺🇸 Estados Unidos</div>
+            <div id="eua-status" style="font-size:11px;color:var(--g400)"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Política Monetária</div></div>
+            <div id="eua-monetaria"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Mercado de Trabalho</div></div>
+            <div id="eua-trabalho"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Inflação e Consumo</div></div>
+            <div id="eua-inflacao"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">Atividade (PMI / ISM)</div></div>
+            <div id="eua-atividade"><div class="empty" style="padding:12px"><p>Inserção manual — PMI S&P Global não tem API pública.</p></div></div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <input type="number" id="pmi-mfg-val" placeholder="ISM Mfg" step="0.1" style="width:90px">
+              <input type="text" id="pmi-mfg-date" placeholder="MM/AAAA" style="width:90px">
+              <input type="number" id="pmi-svc-val" placeholder="ISM Svc" step="0.1" style="width:90px">
+              <button class="btn btn-secondary btn-sm" onclick="savePMI_EUA()">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BRASIL -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="font-family:var(--serif);font-size:14px;font-weight:700">🇧🇷 Brasil</div>
+            <div id="br-status" style="font-size:11px;color:var(--g400)"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Política Monetária</div></div>
+            <div id="br-monetaria"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Inflação</div></div>
+            <div id="br-inflacao"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-hdr"><div class="card-title">Atividade</div></div>
+            <div id="br-atividade"><div class="empty" style="padding:12px"><p>Carregando...</p></div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hdr"><div class="card-title">PMI / PMC / PMS (S&P Global + IBGE)</div></div>
+            <div id="br-pmi"><div class="empty" style="padding:12px"><p>Inserção manual — PMI S&P Global não tem API pública.</p></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+              <input type="number" id="pmi-br-mfg" placeholder="PMI Industrial" step="0.1">
+              <input type="number" id="pmi-br-svc" placeholder="PMI Serviços" step="0.1">
+              <input type="number" id="pmc-val" placeholder="PMC (var. %)" step="0.01">
+              <input type="number" id="pms-val" placeholder="PMS (var. %)" step="0.01">
+              <input type="text" id="pmi-br-date" placeholder="MM/AAAA" style="grid-column:1/-1">
+            </div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px;width:100%" onclick="savePMI_BR()">Salvar PMIs Brasil</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1408,7 +1492,7 @@ function updateBadges(){
 }
 
 // ── NAV ──
-const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',scorecard:'Scorecard do Fundo',analise:'Análise por Período',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
+const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',macrodata:'Dados Macro — Últimas Divulgações',scorecard:'Scorecard do Fundo',analise:'Análise por Período',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
 function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1418,6 +1502,7 @@ function showPage(id,el){
   document.getElementById('topbar-title').textContent=TITLES[id]||id;
   if(id==='performance') setTimeout(loadFromAPI,100);
   if(id==='dashboard') setTimeout(loadFromAPI,100);
+  if(id==='macrodata') setTimeout(loadMacroData,100);
   if(id==='analise'){ const d=new Date(); document.getElementById('ap-fim').value=d.toISOString().split('T')[0]; const s=new Date(d.getFullYear(),d.getMonth(),1); document.getElementById('ap-inicio').value=s.toISOString().split('T')[0]; }
   if(id==='scorecard') setTimeout(loadFromAPI,100);
   if(id==='scorecard') setTimeout(initScoreChart,100);
@@ -1864,6 +1949,183 @@ async function loadCustomFaqs() {
     if (stored) return JSON.parse(stored.value);
   } catch(e) {}
   return [];
+}
+
+// ── DADOS MACRO ──
+const FRED_KEY = 'demo'; // Chave pública FRED — substitua por chave própria em fred.stlouisfed.org (gratuita)
+const BCB_BASE = 'https://api.bcb.gov.br/dados/serie/bcdata.sgs';
+const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
+
+async function fetchFRED(series, limit=1) {
+  try {
+    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=6a8f753bf21d92531ca3eca0c8f39d94&sort_order=desc&limit=${limit}&file_type=json`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const obs = (d.observations||[]).filter(o => o.value !== '.');
+    return obs.length ? obs[0] : null;
+  } catch(e) { return null; }
+}
+
+async function fetchBCB(series, limit=1) {
+  try {
+    const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${series}/dados/ultimos/${limit}?formato=json`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.length ? d[d.length-1] : null;
+  } catch(e) { return null; }
+}
+
+function macroRow(label, value, unit='', date='', positive=null) {
+  const color = positive === null ? 'var(--black)' : positive ? 'var(--green)' : 'var(--red)';
+  return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--g100)">
+    <span style="font-size:12px;color:var(--g600)">${label}</span>
+    <div style="text-align:right">
+      <span style="font-family:var(--serif);font-weight:700;font-size:13px;color:${color}">${value}${unit}</span>
+      ${date ? `<div style="font-size:10px;color:var(--g400)">${date}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function fmtFREDDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
+}
+
+function fmtBCBDate(d) {
+  if (!d) return '';
+  const [day, mon, year] = d.split('/');
+  return `${mon}/${year.slice(2)}`;
+}
+
+async function loadMacroData() {
+  document.getElementById('macro-last-update').textContent = 'Atualizando...';
+
+  // ── EUA ──
+  document.getElementById('eua-status').textContent = 'buscando dados...';
+
+  const [fedFunds, payroll, unrate, jolts, ahe, retailSales, adp, cpi, coreCpi, gdp] = await Promise.all([
+    fetchFRED('FEDFUNDS'),
+    fetchFRED('PAYEMS'),
+    fetchFRED('UNRATE'),
+    fetchFRED('JTSJOL'),
+    fetchFRED('CES0500000003'),
+    fetchFRED('RSAFS'),
+    fetchFRED('ADPWNUSNERSA'),
+    fetchFRED('CPIAUCSL'),
+    fetchFRED('CPILFESL'),
+    fetchFRED('GDP'),
+  ]);
+
+  // EUA Política Monetária
+  document.getElementById('eua-monetaria').innerHTML =
+    macroRow('Fed Funds Rate', fedFunds ? parseFloat(fedFunds.value).toFixed(2) : '—', '%', fedFunds ? fmtFREDDate(fedFunds.date) : '') +
+    macroRow('PIB EUA (trimestral)', gdp ? parseFloat(gdp.value).toFixed(1) : '—', '%', gdp ? fmtFREDDate(gdp.date) : '');
+
+  // EUA Mercado de Trabalho
+  const payrollVal = payroll ? (parseFloat(payroll.value)/1000).toFixed(0) + 'k' : '—';
+  const adpVal = adp ? (parseFloat(adp.value)/1000).toFixed(0) + 'k' : '—';
+  const joltsVal = jolts ? (parseFloat(jolts.value)/1000).toFixed(1) + 'M' : '—';
+  document.getElementById('eua-trabalho').innerHTML =
+    macroRow('Nonfarm Payroll', payrollVal, '', payroll ? fmtFREDDate(payroll.date) : '') +
+    macroRow('ADP Employment', adpVal, '', adp ? fmtFREDDate(adp.date) : '') +
+    macroRow('Taxa de Desemprego', unrate ? parseFloat(unrate.value).toFixed(1) : '—', '%', unrate ? fmtFREDDate(unrate.date) : '') +
+    macroRow('JOLTs (vagas abertas)', joltsVal, '', jolts ? fmtFREDDate(jolts.date) : '') +
+    macroRow('Avg Hourly Earnings', ahe ? parseFloat(ahe.value).toFixed(2) : '—', ' USD', ahe ? fmtFREDDate(ahe.date) : '');
+
+  // EUA Inflação e Consumo
+  document.getElementById('eua-inflacao').innerHTML =
+    macroRow('CPI (a/a)', cpi ? parseFloat(cpi.value).toFixed(1) : '—', '', cpi ? fmtFREDDate(cpi.date) : '') +
+    macroRow('Core CPI (a/a)', coreCpi ? parseFloat(coreCpi.value).toFixed(1) : '—', '', coreCpi ? fmtFREDDate(coreCpi.date) : '') +
+    macroRow('Retail Sales', retailSales ? parseFloat(retailSales.value).toFixed(1) : '—', 'B USD', retailSales ? fmtFREDDate(retailSales.date) : '');
+
+  document.getElementById('eua-status').textContent = '✓ atualizado';
+
+  // Carregar PMIs EUA do storage
+  try {
+    const pmiEua = await window.storage.get('macro_pmi_eua');
+    if (pmiEua) {
+      const p = JSON.parse(pmiEua.value);
+      document.getElementById('eua-atividade').innerHTML =
+        macroRow('ISM Manufacturing PMI', p.mfg || '—', '', p.date || '') +
+        macroRow('ISM Services PMI', p.svc || '—', '', p.date || '');
+    }
+  } catch(e) {}
+
+  // ── BRASIL ──
+  document.getElementById('br-status').textContent = 'buscando dados...';
+
+  const [selic, ipca, ipca15, ibcbr, caged] = await Promise.all([
+    fetchBCB('4189'),   // Selic meta
+    fetchBCB('433'),    // IPCA
+    fetchBCB('13522'),  // IPCA-15
+    fetchBCB('24364'),  // IBC-Br
+    fetchBCB('28763'),  // CAGED
+  ]);
+
+  // Brasil Política Monetária
+  document.getElementById('br-monetaria').innerHTML =
+    macroRow('Selic Meta', selic ? parseFloat(selic.valor).toFixed(2) : '—', '% a.a.', selic ? fmtBCBDate(selic.data) : '') +
+    macroRow('CDI', '— (via batimento diário)', '', '');
+
+  // Brasil Inflação
+  document.getElementById('br-inflacao').innerHTML =
+    macroRow('IPCA (m/m)', ipca ? parseFloat(ipca.valor).toFixed(2) : '—', '%', ipca ? fmtBCBDate(ipca.data) : '') +
+    macroRow('IPCA-15 (m/m)', ipca15 ? parseFloat(ipca15.valor).toFixed(2) : '—', '%', ipca15 ? fmtBCBDate(ipca15.data) : '');
+
+  // Brasil Atividade
+  document.getElementById('br-atividade').innerHTML =
+    macroRow('IBC-Br', ibcbr ? parseFloat(ibcbr.valor).toFixed(2) : '—', '%', ibcbr ? fmtBCBDate(ibcbr.data) : '') +
+    macroRow('CAGED (saldo)', caged ? parseInt(caged.valor).toLocaleString('pt-BR') : '—', ' empregos', caged ? fmtBCBDate(caged.data) : '');
+
+  document.getElementById('br-status').textContent = '✓ atualizado';
+
+  // Carregar PMIs Brasil do storage
+  try {
+    const pmiBr = await window.storage.get('macro_pmi_br');
+    if (pmiBr) {
+      const p = JSON.parse(pmiBr.value);
+      document.getElementById('br-pmi').innerHTML =
+        macroRow('PMI Industrial', p.mfg || '—', '', p.date || '') +
+        macroRow('PMI Serviços', p.svc || '—', '', p.date || '') +
+        macroRow('PMC (var. m/m)', p.pmc ? p.pmc + '%' : '—', '', p.date || '') +
+        macroRow('PMS (var. m/m)', p.pms ? p.pms + '%' : '—', '', p.date || '');
+    }
+  } catch(e) {}
+
+  // PNAD — manual (IBGE API é complexa)
+  document.getElementById('macro-last-update').textContent =
+    'Atualizado em ' + new Date().toLocaleString('pt-BR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+async function savePMI_EUA() {
+  const data = {
+    mfg: document.getElementById('pmi-mfg-val').value,
+    svc: document.getElementById('pmi-svc-val').value,
+    date: document.getElementById('pmi-mfg-date').value,
+  };
+  try { await window.storage.set('macro_pmi_eua', JSON.stringify(data)); } catch(e) {}
+  document.getElementById('eua-atividade').innerHTML =
+    macroRow('ISM Manufacturing PMI', data.mfg || '—', '', data.date) +
+    macroRow('ISM Services PMI', data.svc || '—', '', data.date);
+}
+
+async function savePMI_BR() {
+  const data = {
+    mfg:  document.getElementById('pmi-br-mfg').value,
+    svc:  document.getElementById('pmi-br-svc').value,
+    pmc:  document.getElementById('pmc-val').value,
+    pms:  document.getElementById('pms-val').value,
+    date: document.getElementById('pmi-br-date').value,
+  };
+  try { await window.storage.set('macro_pmi_br', JSON.stringify(data)); } catch(e) {}
+  document.getElementById('br-pmi').innerHTML =
+    macroRow('PMI Industrial', data.mfg || '—', '', data.date) +
+    macroRow('PMI Serviços', data.svc || '—', '', data.date) +
+    macroRow('PMC (var. m/m)', data.pmc ? data.pmc + '%' : '—', '', data.date) +
+    macroRow('PMS (var. m/m)', data.pms ? data.pms + '%' : '—', '', data.date);
 }
 
 // ── ANÁLISE POR PERÍODO ──
