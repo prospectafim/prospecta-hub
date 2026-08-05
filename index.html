@@ -208,6 +208,16 @@ textarea{resize:vertical;min-height:72px}
 .perf-bar{flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden}
 .perf-bar-fill{height:100%;border-radius:3px}
 
+/* PESOS DINÂMICOS */
+.peso-meta{font-size:11px;color:var(--g400)}
+.peso-real{font-size:12px;font-weight:600;font-family:var(--serif)}
+.desvio-pos{color:var(--green)}
+.desvio-neg{color:var(--red)}
+.desvio-ok{color:var(--g400)}
+.alerta-drift{display:inline-flex;align-items:center;gap:4px;background:var(--amber-bg);color:var(--amber);border:1px solid #fde68a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.drift-banner{background:var(--amber-bg);border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none}
+.drift-banner.visible{display:flex;align-items:flex-start;gap:10px}
+
 /* ATRIBUIÇÃO */
 .atrib-panel{margin-top:16px;animation:fadeIn .3s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -477,8 +487,31 @@ document.addEventListener('DOMContentLoaded',function(){
     <!-- CARTEIRA -->
     <div id="page-carteira" class="page">
       <div class="sec-title">Carteira atual — mai/26<span style="font-family:var(--body);font-size:11px;color:var(--g400);font-weight:400">Rebalance: 29/05/2026</span></div>
-      <div class="card"><div class="card-hdr"><div class="card-title">Posições (100% do PL)</div></div>
-        <table><thead><tr><th>Ativo</th><th>Tipo</th><th>Bloomberg</th><th style="min-width:130px">Peso</th><th>Status</th></tr></thead>
+      <!-- Alertas de desvio -->
+      <div id="cart-alertas" style="margin-bottom:12px"></div>
+
+      <div class="card"><div class="card-hdr">
+        <div class="card-title">Posições (100% do PL)</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:var(--g400)">Peso meta → real</span>
+          <button class="btn btn-secondary btn-sm" onclick="loadPesosReais()">↻ Atualizar pesos</button>
+        </div>
+      </div>
+        <!-- Banner alertas drift -->
+        <div class="drift-banner" id="drift-banner">
+          <span style="font-size:18px;flex-shrink:0">⚠️</span>
+          <div>
+            <div style="font-family:var(--serif);font-size:13px;font-weight:700;color:var(--amber);margin-bottom:4px">Desvio significativo detectado</div>
+            <div id="drift-banner-text" style="font-size:12px;color:#92400e;line-height:1.6"></div>
+          </div>
+        </div>
+        <table><thead><tr>
+          <th>Ativo</th><th>Tipo</th><th>Bloomberg</th>
+          <th style="min-width:80px">Meta</th>
+          <th style="min-width:80px">Real</th>
+          <th style="min-width:80px">Desvio</th>
+          <th>Status</th>
+        </tr></thead>
         <tbody id="tbody-carteira"></tbody></table>
       </div>
       <div class="card"><div class="card-hdr"><div class="card-title">Derivativos — exposição nocional</div></div>
@@ -1457,6 +1490,8 @@ function renderAll(){
   ['pm-swedish-data','pm-siemens-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=hoje;});
   // Carrega dados da API em background
   loadFromAPI();
+  // Carrega pesos reais (pode demorar um pouco)
+  setTimeout(loadPesosReais, 1000);
 }
 
 function updateBadges(){
@@ -1476,6 +1511,8 @@ function showPage(id,el){
   document.getElementById('topbar-title').textContent=TITLES[id]||id;
   if(id==='performance') setTimeout(loadFromAPI,100);
   if(id==='dashboard') setTimeout(loadFromAPI,100);
+  if(id==='carteira') setTimeout(loadPesosReais,200);
+  if(id==='carteira') setTimeout(loadPesosReais,300);
   if(id==='macrodata') setTimeout(loadMacroData,100);
   if(id==='analise'){ const d=new Date(); document.getElementById('ap-fim').value=d.toISOString().split('T')[0]; const s=new Date(d.getFullYear(),d.getMonth(),1); document.getElementById('ap-inicio').value=s.toISOString().split('T')[0]; }
   if(id==='scorecard') setTimeout(loadFromAPI,100);
@@ -1484,12 +1521,62 @@ function showPage(id,el){
 }
 
 // ── CARTEIRA ──
-function renderCarteira(){
-  document.getElementById('tbody-carteira').innerHTML=CARTEIRA.map(a=>{
-    const pct=(a.p*100).toFixed(1);
-    const w=Math.min(a.p/0.24*100,100).toFixed(0);
-    return `<tr><td style="font-family:var(--serif);font-weight:700">${a.a}</td><td><span class="pill pill-white">${a.t}</span></td><td style="color:var(--g400);font-size:11px">${a.k}</td><td style="min-width:130px"><div style="display:flex;align-items:center;gap:6px"><span style="font-family:var(--serif);font-weight:700;min-width:34px">${pct}%</span><div class="prog" style="flex:1"><div class="prog-fill" style="width:${w}%"></div></div></div></td><td><span class="pill pill-green">Ativa</span></td></tr>`;
+let pesosReaisCache = {};
+
+function renderCarteira(pesosReais) {
+  const pr = pesosReais || pesosReaisCache;
+  document.getElementById('tbody-carteira').innerHTML = CARTEIRA.map(a => {
+    const meta = (a.p * 100).toFixed(1);
+    const real = pr[a.a] !== undefined ? (pr[a.a] * 100).toFixed(1) : null;
+    const desvio = real !== null ? (parseFloat(real) - parseFloat(meta)) : null;
+    const alerta = desvio !== null && Math.abs(desvio) >= 3;
+
+    const desvioHtml = desvio !== null
+      ? `<span style="font-size:12px;font-weight:600;color:${alerta ? 'var(--red)' : Math.abs(desvio) > 1 ? 'var(--amber)' : 'var(--green)'}">${desvio >= 0 ? '+' : ''}${desvio.toFixed(1)}pp${alerta ? ' ⚠' : ''}</span>`
+      : '<span style="color:var(--g300)">—</span>';
+
+    const realHtml = real !== null
+      ? `<span style="font-family:var(--serif);font-weight:700;color:${alerta ? 'var(--red)' : 'var(--black)'}">${real}%</span>`
+      : '<span style="color:var(--g300)">—</span>';
+
+    return `<tr>
+      <td style="font-family:var(--serif);font-weight:700">${a.a}</td>
+      <td><span class="pill pill-white">${a.t}</span></td>
+      <td style="color:var(--g400);font-size:11px">${a.k}</td>
+      <td><span style="font-family:var(--serif);font-weight:700">${meta}%</span></td>
+      <td>${realHtml}</td>
+      <td>${desvioHtml}</td>
+      <td><span class="pill pill-green">Ativa</span></td>
+    </tr>`;
   }).join('');
+}
+
+async function loadPesosReais() {
+  try {
+    const data = await apiFetch('/api/pesos-reais');
+    if (!data || !data.ativos) return;
+
+    // Atualiza cache
+    pesosReaisCache = {};
+    data.ativos.forEach(a => { pesosReaisCache[a.ativo] = a.peso_real; });
+
+    // Re-renderiza tabela com pesos reais
+    renderCarteira(pesosReaisCache);
+
+    // Mostra alertas
+    const alertasEl = document.getElementById('cart-alertas');
+    if ((data.num_alertas || data.n_alertas || 0) > 0) {
+      alertasEl.innerHTML = data.alertas.map(a =>
+        `<div class="alert-box alert-warn" style="margin-bottom:6px">
+          <strong>⚠ ${a.ativo}</strong> — peso meta: ${(a.peso_meta*100).toFixed(1)}% | peso real: ${(a.peso_real*100).toFixed(1)}% | desvio: ${a.desvio >= 0 ? '+' : ''}${(a.desvio*100).toFixed(1)}pp — considerar rebalance
+        </div>`
+      ).join('');
+    } else {
+      alertasEl.innerHTML = '<div class="alert-box alert-ok" style="margin-bottom:6px">✓ Todos os pesos dentro da banda de tolerância (±3pp)</div>';
+    }
+  } catch(e) {
+    console.warn('Pesos reais error:', e);
+  }
 }
 
 // ── CHARTS ──
