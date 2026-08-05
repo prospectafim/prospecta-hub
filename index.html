@@ -208,6 +208,20 @@ textarea{resize:vertical;min-height:72px}
 .perf-bar{flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden}
 .perf-bar-fill{height:100%;border-radius:3px}
 
+/* ATRIBUIÇÃO */
+.atrib-panel{margin-top:16px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.atrib-bar-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100)}
+.atrib-bar-row:last-child{border-bottom:none}
+.atrib-ativo{font-family:var(--serif);font-weight:700;font-size:12px;min-width:140px}
+.atrib-peso{font-size:11px;color:var(--g400);min-width:36px;text-align:right}
+.atrib-bar-wrap{flex:1;height:8px;background:var(--g100);border-radius:4px;position:relative;overflow:visible}
+.atrib-bar-fill{height:100%;border-radius:4px;position:absolute;top:0}
+.atrib-var{font-size:11px;font-weight:600;min-width:56px;text-align:right}
+.atrib-contrib{font-size:11px;min-width:56px;text-align:right;font-family:var(--serif)}
+.atrib-header{display:flex;align-items:center;gap:8px;padding:0 0 6px;border-bottom:2px solid var(--g200);margin-bottom:4px}
+.atrib-total-row{display:flex;align-items:center;gap:8px;padding:10px 0 0;margin-top:4px;border-top:2px solid var(--g200)}
+
 /* SIMULADOR */
 .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .sim-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
@@ -494,6 +508,26 @@ document.addEventListener('DOMContentLoaded',function(){
           <canvas id="chart-mensal" height="120"></canvas>
         </div>
       </div>
+      <!-- Painel de atribuição por mês (aparece ao clicar no gráfico) -->
+      <div id="atrib-panel" class="atrib-panel" style="display:none">
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title" id="atrib-title">Atribuição — mês</div>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('atrib-panel').style.display='none'">✕ Fechar</button>
+          </div>
+          <!-- Header colunas -->
+          <div class="atrib-header">
+            <span class="atrib-ativo" style="font-family:var(--body);font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Ativo</span>
+            <span class="atrib-peso" style="font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Peso</span>
+            <span style="flex:1;font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.06em;text-align:center">Variação no mês</span>
+            <span class="atrib-var" style="font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Var.</span>
+            <span class="atrib-contrib" style="font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Contrib.</span>
+          </div>
+          <div id="atrib-body"></div>
+          <div id="atrib-total" class="atrib-total-row"></div>
+        </div>
+      </div>
+
       <div class="card" style="margin-top:14px">
         <div class="card-hdr"><div class="card-title">Métricas de risco</div></div>
         <div class="grid-3" style="gap:10px">
@@ -1267,8 +1301,19 @@ function updateChartsFromAPI(cotas, metricas) {
         {label:'CDI',   data: cdiMVals,
          backgroundColor:'rgba(154,154,154,0.4)', borderRadius:2}
       ]
-    }, options:{responsive:true, plugins:{legend:{labels:{font:{family:'Lora',size:11}}}},
-      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%', font:{family:'Lora',size:10}}, grid:{color:'#f0f0f0'}},
+    }, options:{responsive:true,
+      onClick:(evt,els)=>{
+        if(els&&els.length>0){
+          const i=els[0].index;
+          const mes=monthlyKeys[i];
+          loadAtribuicao(mes);
+        }
+      },
+      plugins:{
+        legend:{labels:{font:{family:'Lora',size:11}}},
+        tooltip:{callbacks:{footer:()=>'Clique para ver atribuição por ativo'}}
+      },
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%',font:{family:'Lora',size:10}},grid:{color:'#f0f0f0'}},
               x:{ticks:{font:{family:'Lora',size:9}}, grid:{display:false}}}}});
   }
 
@@ -2166,6 +2211,82 @@ async function savePMI_BR() {
     macroRow('PMI Serviços', data.svc || '—', '', data.date) +
     macroRow('PMC (var. m/m)', data.pmc ? data.pmc + '%' : '—', '', data.date) +
     macroRow('PMS (var. m/m)', data.pms ? data.pms + '%' : '—', '', data.date);
+}
+
+// ── ATRIBUIÇÃO POR ATIVO ──
+const MESES_LABELS = {
+  '2025-05':'mai/25','2025-06':'jun/25','2025-07':'jul/25','2025-08':'ago/25',
+  '2025-09':'set/25','2025-10':'out/25','2025-11':'nov/25','2025-12':'dez/25',
+  '2026-01':'jan/26','2026-02':'fev/26','2026-03':'mar/26','2026-04':'abr/26',
+  '2026-05':'mai/26','2026-06':'jun/26','2026-07':'jul/26','2026-08':'ago/26',
+};
+
+async function loadAtribuicao(mes) {
+  const panel = document.getElementById('atrib-panel');
+  const body  = document.getElementById('atrib-body');
+  const total = document.getElementById('atrib-total');
+  const title = document.getElementById('atrib-title');
+
+  panel.style.display = 'block';
+  body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--g400);font-size:12px">Buscando dados...</div>';
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+
+  const label = MESES_LABELS[mes] || mes;
+  title.textContent = 'Atribuição — ' + label;
+
+  try {
+    const data = await apiFetch('/api/atribuicao?mes=' + mes);
+    if (!data || !data.ativos) {
+      body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--g400);font-size:12px">Sem dados para este mês.</div>';
+      return;
+    }
+
+    const ativos = data.ativos;
+    const maxAbsContrib = Math.max(...ativos.filter(a=>a.contribuicao!=null).map(a=>Math.abs(a.contribuicao)), 0.001);
+
+    body.innerHTML = ativos.map(a => {
+      if (a.sem_dados) {
+        return `<div class="atrib-bar-row">
+          <span class="atrib-ativo">${a.ativo}</span>
+          <span class="atrib-peso">${(a.peso*100).toFixed(1)}%</span>
+          <span style="flex:1;font-size:11px;color:var(--g400);text-align:center">sem preços</span>
+          <span class="atrib-var" style="color:var(--g400)">—</span>
+          <span class="atrib-contrib" style="color:var(--g400)">—</span>
+        </div>`;
+      }
+
+      const contrib = a.contribuicao || 0;
+      const varMes  = a.var_mes || 0;
+      const pct     = Math.abs(contrib) / maxAbsContrib * 100;
+      const isPos   = contrib >= 0;
+      const barColor = isPos ? 'rgba(21,128,61,0.7)' : 'rgba(155,28,28,0.7)';
+      const barLeft  = isPos ? '50%' : (50 - pct/2) + '%';
+      const barWidth = (pct/2) + '%';
+
+      return `<div class="atrib-bar-row">
+        <span class="atrib-ativo">${a.ativo}</span>
+        <span class="atrib-peso">${(a.peso*100).toFixed(1)}%</span>
+        <div class="atrib-bar-wrap">
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1px;height:14px;background:var(--g300)"></div>
+          <div class="atrib-bar-fill" style="left:${barLeft};width:${barWidth};background:${barColor}"></div>
+        </div>
+        <span class="atrib-var" style="color:${isPos?'var(--green)':'var(--red)'}">${(varMes*100).toFixed(2)}%</span>
+        <span class="atrib-contrib" style="color:${isPos?'var(--green)':'var(--red)'}">${contrib>=0?'+':''}${(contrib*100).toFixed(3)}%</span>
+      </div>`;
+    }).join('');
+
+    // Total
+    const retMes = data.retorno_mes || 0;
+    total.innerHTML = `
+      <span class="atrib-ativo" style="font-family:var(--serif);font-size:13px">Total do mês</span>
+      <span class="atrib-peso"></span>
+      <span style="flex:1"></span>
+      <span class="atrib-var"></span>
+      <span class="atrib-contrib" style="font-family:var(--serif);font-size:15px;font-weight:700;color:${retMes>=0?'var(--green)':'var(--red)'}">${retMes>=0?'+':''}${(retMes*100).toFixed(3)}%</span>`;
+
+  } catch(e) {
+    body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--red);font-size:12px">Erro ao buscar atribuição: ' + e.message + '</div>';
+  }
 }
 
 // ── ANÁLISE POR PERÍODO ──
