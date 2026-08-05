@@ -507,9 +507,10 @@ document.addEventListener('DOMContentLoaded',function(){
         </div>
         <table><thead><tr>
           <th>Ativo</th><th>Tipo</th><th>Bloomberg</th>
-          <th style="min-width:80px">Meta</th>
-          <th style="min-width:80px">Real</th>
-          <th style="min-width:80px">Desvio</th>
+          <th style="min-width:70px">Meta</th>
+          <th style="min-width:70px">Real</th>
+          <th style="min-width:70px">Desvio</th>
+          <th style="text-align:center;min-width:60px">Sinal</th>
           <th>Status</th>
         </tr></thead>
         <tbody id="tbody-carteira"></tbody></table>
@@ -1366,24 +1367,32 @@ function updateChartsFromAPI(cotas, metricas) {
 
 // ── DADOS ──
 const CARTEIRA = [
-  {a:"LFT 2031",t:"Tesouro",p:0.240,k:"LFT 2031",cls:"RF Brasil"},
-  {a:"NTN-B 2029",t:"Tesouro",p:0.195,k:"NTNB 2029",cls:"RF Brasil"},
-  {a:"NTN-B 2035",t:"Tesouro",p:0.145,k:"NTNB 2035",cls:"RF Brasil"},
-  {a:"STIP",t:"ETF USD",p:0.070,k:"STIP US Equity",cls:"RF Global"},
-  {a:"IAU",t:"ETF USD",p:0.050,k:"IAU US Equity",cls:"Commodities"},
-  {a:"Swedish Gov Bond",t:"Bond",p:0.050,k:"GSGB10YR Index",cls:"RF Global"},
-  {a:"Siemens Energy Bond",t:"Bond",p:0.040,k:"Siemens NRG 29",cls:"RF Global"},
-  {a:"IVV",t:"ETF USD",p:0.030,k:"IVV US Equity",cls:"Ações Globais"},
-  {a:"BOVA11",t:"Ação BR",p:0.030,k:"BOVA11 BZ Equity",cls:"Ações BR"},
-  {a:"UTLL11",t:"Ação BR",p:0.030,k:"UTLL11 BZ Equity",cls:"Ações BR"},
-  {a:"CPER",t:"ETF USD",p:0.025,k:"CPER US Equity",cls:"Commodities"},
-  {a:"URNM",t:"ETF USD",p:0.020,k:"URNM US Equity",cls:"Ações Globais"},
-  {a:"REMX",t:"ETF USD",p:0.020,k:"REMX US Equity",cls:"Ações Globais"},
-  {a:"RAIL3",t:"Ação BR",p:0.020,k:"RAIL3 BZ Equity",cls:"Ações BR"},
-  {a:"CORN",t:"ETF USD",p:0.015,k:"CORN US Equity",cls:"Commodities"},
-  {a:"CANE",t:"ETF USD",p:0.010,k:"CANE US Equity",cls:"Commodities"},
-  {a:"Bitcoin",t:"Cripto",p:0.010,k:"XBT Curncy",cls:"Cripto"},
+  {a:"LFT 2031",         t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true},
+  {a:"NTN-B 2029",       t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true},
+  {a:"NTN-B 2035",       t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true},
+  {a:"STIP",             t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true},
+  {a:"IAU",              t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true},
+  {a:"Swedish Gov Bond", t:"Bond",     p:0.050, k:"GSGB10YR Index",   cls:"RF Global",     long:true},
+  {a:"Siemens Energy Bond",t:"Bond",   p:0.040, k:"Siemens NRG 29",   cls:"RF Global",     long:true},
+  {a:"IVV",              t:"ETF USD",  p:0.030, k:"IVV US Equity",    cls:"Ações Globais", long:true},
+  {a:"BOVA11",           t:"Ação BR",  p:0.030, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true},
+  {a:"UTLL11",           t:"Ação BR",  p:0.030, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true},
+  {a:"CPER",             t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true},
+  {a:"URNM",             t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true},
+  {a:"REMX",             t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true},
+  {a:"RAIL3",            t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true},
+  {a:"CORN",             t:"ETF USD",  p:0.015, k:"CORN US Equity",   cls:"Commodities",   long:true},
+  {a:"CANE",             t:"ETF USD",  p:0.010, k:"CANE US Equity",   cls:"Commodities",   long:true},
+  {a:"Bitcoin",          t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true},
 ];
+
+// Direção esperada da tese para derivativos
+const DERIV_TESE = {
+  "EUR/BRL":  {long:false, descr:"Vendido — espera real forte vs euro"},
+  "MXN/CAD":  {long:true,  descr:"Comprado — espera peso mexicano forte"},
+  "SMAL11":   {long:false, descr:"Vendido — small caps pressionadas por juros"},
+  "USD/JPY":  {long:false, descr:"Vendido — espera yen forte (BoJ hawkish)"},
+};
 
 const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
 const MONTHLY_CDI  = [1.14,1.10,1.28,1.16,1.22,1.28,1.05,1.22,1.16,1.00,1.21,1.09,1.07];
@@ -1523,21 +1532,64 @@ function showPage(id,el){
 // ── CARTEIRA ──
 let pesosReaisCache = {};
 
+// Determina o sinal para um ativo com base no drift e na tese
+function calcularSinal(ativo, desvio, pesosReaisData) {
+  if (desvio === null) return {icon:'—', cls:'', tip:'Sem dados de preço'};
+
+  const THRESHOLD = 3; // pp
+  const abs = Math.abs(desvio);
+
+  if (abs < THRESHOLD) {
+    return {icon:'✓', cls:'color:var(--g400)', tip:'Dentro da banda ±3pp'};
+  }
+
+  // Drift significativo — verifica se é a favor ou contra a tese
+  const ativoData = CARTEIRA.find(a => a.a === ativo);
+  if (!ativoData) return {icon:'⚠', cls:'color:var(--amber)', tip:'Revisar'};
+
+  const long = ativoData.long; // true = espera alta
+  const subiu = desvio > 0;    // desvio positivo = ativo subiu mais que os outros
+
+  const favorTese = (long && subiu) || (!long && !subiu);
+
+  if (favorTese) {
+    return {
+      icon:'🟢',
+      cls:'color:var(--green)',
+      tip:'Drift intencional — tese funcionando. Deixar correr.'
+    };
+  } else {
+    return {
+      icon:'🔴',
+      cls:'color:var(--red)',
+      tip:'Drift contra a tese — considerar stop ou redução em comitê.'
+    };
+  }
+}
+
 function renderCarteira(pesosReais) {
   const pr = pesosReais || pesosReaisCache;
+
   document.getElementById('tbody-carteira').innerHTML = CARTEIRA.map(a => {
-    const meta = (a.p * 100).toFixed(1);
-    const real = pr[a.a] !== undefined ? (pr[a.a] * 100).toFixed(1) : null;
-    const desvio = real !== null ? (parseFloat(real) - parseFloat(meta)) : null;
+    const meta  = (a.p * 100).toFixed(1);
+    const real  = pr[a.a] !== undefined ? (pr[a.a] * 100).toFixed(1) : null;
+    const desvio = real !== null ? parseFloat(real) - parseFloat(meta) : null;
     const alerta = desvio !== null && Math.abs(desvio) >= 3;
+    const sinal  = calcularSinal(a.a, desvio, pr);
 
     const desvioHtml = desvio !== null
-      ? `<span style="font-size:12px;font-weight:600;color:${alerta ? 'var(--red)' : Math.abs(desvio) > 1 ? 'var(--amber)' : 'var(--green)'}">${desvio >= 0 ? '+' : ''}${desvio.toFixed(1)}pp${alerta ? ' ⚠' : ''}</span>`
+      ? `<span style="font-size:12px;font-weight:600;color:${
+          alerta
+            ? (desvio > 0 ? 'var(--green)' : 'var(--red)')
+            : Math.abs(desvio) > 1 ? 'var(--amber)' : 'var(--g400)'
+        }">${desvio >= 0 ? '+' : ''}${desvio.toFixed(1)}pp</span>`
       : '<span style="color:var(--g300)">—</span>';
 
     const realHtml = real !== null
-      ? `<span style="font-family:var(--serif);font-weight:700;color:${alerta ? 'var(--red)' : 'var(--black)'}">${real}%</span>`
+      ? `<span style="font-family:var(--serif);font-weight:700;color:var(--black)">${real}%</span>`
       : '<span style="color:var(--g300)">—</span>';
+
+    const sinalHtml = `<span title="${sinal.tip}" style="${sinal.cls};cursor:help;font-size:14px">${sinal.icon}</span>`;
 
     return `<tr>
       <td style="font-family:var(--serif);font-weight:700">${a.a}</td>
@@ -1546,6 +1598,7 @@ function renderCarteira(pesosReais) {
       <td><span style="font-family:var(--serif);font-weight:700">${meta}%</span></td>
       <td>${realHtml}</td>
       <td>${desvioHtml}</td>
+      <td style="text-align:center">${sinalHtml}</td>
       <td><span class="pill pill-green">Ativa</span></td>
     </tr>`;
   }).join('');
@@ -1556,28 +1609,57 @@ async function loadPesosReais() {
     const data = await apiFetch('/api/pesos-reais');
     if (!data || !data.ativos) return;
 
-    // Atualiza cache
     pesosReaisCache = {};
     data.ativos.forEach(a => { pesosReaisCache[a.ativo] = a.peso_real; });
 
-    // Re-renderiza tabela com pesos reais
     renderCarteira(pesosReaisCache);
 
-    // Mostra alertas
+    // Banner de alertas
     const alertasEl = document.getElementById('cart-alertas');
-    if ((data.num_alertas || data.n_alertas || 0) > 0) {
-      alertasEl.innerHTML = data.alertas.map(a =>
-        `<div class="alert-box alert-warn" style="margin-bottom:6px">
-          <strong>⚠ ${a.ativo}</strong> — peso meta: ${(a.peso_meta*100).toFixed(1)}% | peso real: ${(a.peso_real*100).toFixed(1)}% | desvio: ${a.desvio >= 0 ? '+' : ''}${(a.desvio*100).toFixed(1)}pp — considerar rebalance
-        </div>`
-      ).join('');
+    const ativos_com_alerta = data.ativos.filter(a => a.alerta);
+
+    if (ativos_com_alerta.length > 0) {
+      // Classifica alertas por tipo (stop vs intencional)
+      const stops = [], intencionais = [];
+      ativos_com_alerta.forEach(a => {
+        const ativoData = CARTEIRA.find(c => c.a === a.ativo);
+        const long = ativoData ? ativoData.long : true;
+        const subiu = a.desvio > 0;
+        const favorTese = (long && subiu) || (!long && !subiu);
+        if (favorTese) intencionais.push(a);
+        else stops.push(a);
+      });
+
+      let html = '';
+
+      if (stops.length > 0) {
+        html += '<div class="alert-box alert-err" style="margin-bottom:8px">' +
+          '<strong>🔴 Stop sugerido — drift contra a tese:</strong><br>' +
+          stops.map(a => {
+            const dev = (a.desvio*100).toFixed(1);
+            return `&nbsp;&nbsp;<strong>${a.ativo}</strong>: meta ${(a.peso_meta*100).toFixed(1)}% → real ${(a.peso_real*100).toFixed(1)}% (${a.desvio>0?'+':''}${dev}pp) — discutir em comitê`;
+          }).join('<br>') + '</div>';
+      }
+
+      if (intencionais.length > 0) {
+        html += '<div class="alert-box alert-ok" style="margin-bottom:8px">' +
+          '<strong>🟢 Drift intencional — tese funcionando:</strong><br>' +
+          intencionais.map(a => {
+            const dev = (a.desvio*100).toFixed(1);
+            return `&nbsp;&nbsp;<strong>${a.ativo}</strong>: meta ${(a.peso_meta*100).toFixed(1)}% → real ${(a.peso_real*100).toFixed(1)}% (${a.desvio>0?'+':''}${dev}pp) — deixar correr`;
+          }).join('<br>') + '</div>';
+      }
+
+      alertasEl.innerHTML = html;
     } else {
-      alertasEl.innerHTML = '<div class="alert-box alert-ok" style="margin-bottom:6px">✓ Todos os pesos dentro da banda de tolerância (±3pp)</div>';
+      alertasEl.innerHTML = '<div class="alert-box alert-ok" style="margin-bottom:8px">✓ Todos os pesos dentro da banda de tolerância (±3pp)</div>';
     }
+
   } catch(e) {
     console.warn('Pesos reais error:', e);
   }
 }
+
 
 // ── CHARTS ──
 function initCharts(){
