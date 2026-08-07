@@ -457,7 +457,6 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="card-hdr"><div class="card-title">Derivativos ativos</div></div>
           <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">8,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
-          <div class="deriv-row"><div><div class="deriv-name">SMAL11</div><div class="deriv-meta">Entrada 29/05/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">2,5%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">USD/JPY (JAPQ26)</div><div class="deriv-meta">Entrada 30/07/2026 · ref. 159,82 · venc. 13/08</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">10,0%</div></div></div>
         </div>
       </div>
@@ -520,7 +519,7 @@ document.addEventListener('DOMContentLoaded',function(){
         <tbody>
           <tr><td style="font-family:var(--serif);font-weight:700">EUR/BRL</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">8,0%</td><td>24/04/2026</td><td style="color:var(--g400)">EUR BRL Curncy</td></tr>
           <tr><td style="font-family:var(--serif);font-weight:700">MXN/CAD</td><td><span class="pill pill-green">Comprado</span></td><td style="font-family:var(--serif);font-weight:700">3,0%</td><td>27/04/2026</td><td style="color:var(--g400)">MXN CAD Curncy</td></tr>
-          <tr><td style="font-family:var(--serif);font-weight:700">SMAL11</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">2,5%</td><td>29/05/2026</td><td style="color:var(--g400)">SMAL11 BZ Equity</td></tr>
+          
         </tbody></table>
       </div>
     </div>
@@ -1367,30 +1366,28 @@ function updateChartsFromAPI(cotas, metricas) {
 
 // ── DADOS ──
 const CARTEIRA = [
-  {a:"LFT 2031",         t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true},
-  {a:"NTN-B 2029",       t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true},
-  {a:"NTN-B 2035",       t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true},
-  {a:"STIP",             t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true},
-  {a:"IAU",              t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true},
-  {a:"Swedish Gov Bond", t:"Bond",     p:0.050, k:"GSGB10YR Index",   cls:"RF Global",     long:true},
-  {a:"Siemens Energy Bond",t:"Bond",   p:0.040, k:"Siemens NRG 29",   cls:"RF Global",     long:true},
-  {a:"IVV",              t:"ETF USD",  p:0.030, k:"IVV US Equity",    cls:"Ações Globais", long:true},
-  {a:"BOVA11",           t:"Ação BR",  p:0.030, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true},
-  {a:"UTLL11",           t:"Ação BR",  p:0.030, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true},
-  {a:"CPER",             t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true},
-  {a:"URNM",             t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true},
-  {a:"REMX",             t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true},
-  {a:"RAIL3",            t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true},
-  {a:"CORN",             t:"ETF USD",  p:0.015, k:"CORN US Equity",   cls:"Commodities",   long:true},
-  {a:"CANE",             t:"ETF USD",  p:0.010, k:"CANE US Equity",   cls:"Commodities",   long:true},
-  {a:"Bitcoin",          t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true},
+  {a:"LFT 2031",   t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true},
+  {a:"NTN-B 2029", t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true},
+  {a:"NTN-B 2035", t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true},
+  {a:"STIP",       t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true},
+  {a:"IAU",        t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true},
+  {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true},
+  {a:"BOVA11",     t:"Ação BR",  p:0.050, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true},
+  {a:"UTLL11",     t:"Ação BR",  p:0.040, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true},
+  {a:"CURY3",      t:"Ação BR",  p:0.030, k:"CURY3 BZ Equity",  cls:"Ações BR",      long:true},
+  {a:"RAIL3",      t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true},
+  {a:"CPER",       t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true},
+  {a:"CORN",       t:"ETF USD",  p:0.025, k:"CORN US Equity",   cls:"Commodities",   long:true},
+  {a:"CANE",       t:"ETF USD",  p:0.020, k:"CANE US Equity",   cls:"Commodities",   long:true},
+  {a:"URNM",       t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true},
+  {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true},
+  {a:"Bitcoin",    t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true},
 ];
 
 // Direção esperada da tese para derivativos
 const DERIV_TESE = {
   "EUR/BRL":  {long:false, descr:"Vendido — espera real forte vs euro"},
   "MXN/CAD":  {long:true,  descr:"Comprado — espera peso mexicano forte"},
-  "SMAL11":   {long:false, descr:"Vendido — small caps pressionadas por juros"},
   "USD/JPY":  {long:false, descr:"Vendido — espera yen forte (BoJ hawkish)"},
 };
 
