@@ -457,6 +457,7 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="card-hdr"><div class="card-title">Derivativos ativos</div></div>
           <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">8,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">DI1F31 (50 contratos)</div><div class="deriv-meta">Entrada 03/09/2026 · taxa 14,17% · PU 56.639,60 · DV01 R$12.177</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional" style="font-size:11px">tático</div></div></div>
 
         </div>
       </div>
@@ -519,6 +520,13 @@ document.addEventListener('DOMContentLoaded',function(){
         <tbody>
           <tr><td style="font-family:var(--serif);font-weight:700">EUR/BRL</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">8,0%</td><td>24/04/2026</td><td style="color:var(--g400)">EUR BRL Curncy</td></tr>
           <tr><td style="font-family:var(--serif);font-weight:700">MXN/CAD</td><td><span class="pill pill-green">Comprado</span></td><td style="font-family:var(--serif);font-weight:700">3,0%</td><td>27/04/2026</td><td style="color:var(--g400)">MXN CAD Curncy</td></tr>
+            <tr>
+              <td style="font-family:var(--serif);font-weight:700">DI1F31 (50 contratos)</td>
+              <td><span class="pill pill-red">Vendido</span></td>
+              <td style="font-family:var(--serif);font-weight:700">Tático</td>
+              <td>03/09/2026 · venc. jan/31</td>
+              <td style="color:var(--g400)">DI1F31 · taxa 14,17% · PU 56.639 · DV01 R$12.177/bp</td>
+            </tr>
           
         </tbody></table>
       </div>
@@ -1388,6 +1396,7 @@ const CARTEIRA = [
 const DERIV_TESE = {
   "EUR/BRL":  {long:false, descr:"Vendido — espera real forte vs euro"},
   "MXN/CAD":  {long:true,  descr:"Comprado — espera peso mexicano forte"},
+  "DI1F31":   {long:false, descr:"Vendido — tese de fechamento de 50bps (subposicionamento em RF + momentum Flávio)"},
 };
 
 const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
