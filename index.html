@@ -208,6 +208,24 @@ textarea{resize:vertical;min-height:72px}
 .perf-bar{flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden}
 .perf-bar-fill{height:100%;border-radius:3px}
 
+/* GESTÃO DE RISCO — LEGACY FRAMEWORK */
+.conv-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:700;flex-shrink:0}
+.conv-1{background:#f0f0f0;color:#666}
+.conv-2{background:#0A0A0A;color:#fff}
+.conv-3{background:#C9A84C;color:#0A0A0A}
+.var-area-card{background:#fff;border:1px solid var(--g100);border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.var-area-title{font-family:var(--serif);font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.var-bar{height:6px;background:var(--g100);border-radius:3px;margin-top:6px;overflow:hidden}
+.var-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.corr-cell{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border-radius:4px;cursor:default}
+.stop-aciona{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px}
+.framework-card{background:#fff;border:1px solid var(--g100);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.framework-num{font-family:var(--serif);font-size:42px;font-weight:700;color:var(--black);line-height:1}
+.framework-label{font-size:11px;color:var(--g400);margin-top:2px;letter-spacing:.04em}
+.framework-desc{font-size:13px;color:var(--g600);margin-top:10px;line-height:1.6}
+.conv-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--g100)}
+.conv-row:last-child{border-bottom:none}
+
 /* PESOS DINÂMICOS */
 .peso-meta{font-size:11px;color:var(--g400)}
 .peso-real{font-size:12px;font-weight:600;font-family:var(--serif)}
@@ -412,6 +430,7 @@ document.addEventListener('DOMContentLoaded',function(){
     <div class="sb-section">
       <div class="sb-label">Sistema</div>
       <div class="nav-item" onclick="showPage('analise',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg><span>Análise por Período</span></div>
+      <div class="nav-item" onclick="showPage('risco',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L3 7v10l9 5 9-5V7z"/><polyline points="12 22 12 12"/><path d="M3.3 7l8.7 5 8.7-5"/></svg><span>Gestão de Risco</span></div>
       <div class="nav-item" onclick="showPage('scorecard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Scorecard</span></div>
       <div class="nav-item" onclick="showPage('faq',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>FAQ / Manual</span></div>
     </div>
@@ -553,7 +572,11 @@ document.addEventListener('DOMContentLoaded',function(){
       <div id="atrib-panel" class="atrib-panel" style="display:none">
         <div class="card">
           <div class="card-hdr">
-            <div class="card-title" id="atrib-title">Atribuição — mês</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn btn-secondary btn-sm" id="atrib-prev" onclick="navAtribuicao(-1)">← Anterior</button>
+              <div class="card-title" id="atrib-title">Atribuição — mês</div>
+              <button class="btn btn-secondary btn-sm" id="atrib-next" onclick="navAtribuicao(+1)">Próximo →</button>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="document.getElementById('atrib-panel').style.display='none'">✕ Fechar</button>
           </div>
           <!-- Header colunas -->
@@ -832,6 +855,105 @@ document.addEventListener('DOMContentLoaded',function(){
       </div>
     </div>
 
+    <!-- GESTÃO DE RISCO -->
+    <div id="page-risco" class="page">
+      <div class="sec-title">Gestão de Risco — Framework Legacy Capital</div>
+
+      <!-- VaR por Área -->
+      <div class="grid-2" style="margin-bottom:16px">
+        <div>
+          <div style="font-family:var(--serif);font-size:13px;font-weight:700;margin-bottom:10px">VaR 95% por Área (estimado)</div>
+          <div id="var-areas"></div>
+          <div style="margin-top:12px;padding:10px 14px;background:#f8f8f8;border-radius:8px">
+            <div style="font-size:11px;color:var(--g400);margin-bottom:4px">VaR 95% consolidado do fundo</div>
+            <div id="var-total" style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--red)">—</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:2px">Calculado via volatilidade histórica × peso × z-score 1,645</div>
+          </div>
+        </div>
+
+        <!-- Convicção atual por ativo -->
+        <div>
+          <div style="font-family:var(--serif);font-size:13px;font-weight:700;margin-bottom:10px">Mapa de Convicção da Carteira</div>
+          <div id="mapa-convicao"></div>
+        </div>
+      </div>
+
+      <!-- Matriz de correlação -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr">
+          <div class="card-title">Correlação entre ativos — risco de concentração oculta</div>
+          <span style="font-size:11px;color:var(--g400)">Baseada em volatilidades estimadas · correlações > 0,7 indicam concentração</span>
+        </div>
+        <div id="matriz-corr" style="overflow-x:auto"></div>
+      </div>
+
+      <!-- Teoria -->
+      <div style="font-family:var(--serif);font-size:13px;font-weight:700;margin-bottom:12px">O Framework — teoria por trás</div>
+
+      <div class="grid-2">
+        <!-- Convicção -->
+        <div class="framework-card">
+          <div class="framework-num">1 · 2 · 3</div>
+          <div class="framework-label">Níveis de Convicção</div>
+          <div class="framework-desc">Cada tese recebe um nível de convicção que modula o tamanho da posição. Não é subjetivo — é uma disciplina de sizing que evita posições iguais em teses com qualidades diferentes.</div>
+          <div style="margin-top:14px">
+            <div class="conv-row">
+              <span class="conv-badge conv-1">1</span>
+              <div><div style="font-size:12px;font-weight:600">Baixa — ½ do tamanho padrão</div><div style="font-size:11px;color:var(--g400);margin-top:2px">Tese com menos dados ou maior incerteza. Posição pequena permite participar sem risco excessivo.</div></div>
+            </div>
+            <div class="conv-row">
+              <span class="conv-badge conv-2">2</span>
+              <div><div style="font-size:12px;font-weight:600">Padrão — tamanho normal</div><div style="font-size:11px;color:var(--g400);margin-top:2px">A maioria das posições fica aqui. Convicção razoável com fundamento macro e técnico alinhados.</div></div>
+            </div>
+            <div class="conv-row" style="border:none">
+              <span class="conv-badge conv-3">3</span>
+              <div><div style="font-size:12px;font-weight:600">Alta — 1,5× o tamanho padrão</div><div style="font-size:11px;color:var(--g400);margin-top:2px">Reservada para assimetrias claras: baixo risco de perda, alto potencial de ganho. "Cheiro de fumaça."</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VaR por área -->
+        <div class="framework-card">
+          <div class="framework-num">VaR</div>
+          <div class="framework-label">Distribuição por Área</div>
+          <div class="framework-desc">A Legacy distribui o orçamento de risco (VaR diário) entre as áreas — igualmente ou ponderado por competência. Isso evita que uma área consuma todo o risco do fundo sem consciência das outras.</div>
+          <div style="margin-top:14px;font-size:12px;color:var(--g600);line-height:1.8">
+            <div>① Meta de retorno → vol alvo anual (ex: CDI+5% exige ~8% de vol)</div>
+            <div>② Vol anual → VaR diário (÷ √252 × z-score 1,645)</div>
+            <div>③ VaR diário → distribuído por área (RF, Equities, FX/Commodities)</div>
+            <div>④ Dentro de cada área: modula por convicção (1, 2 ou 3)</div>
+            <div>⑤ Checa correlação: se tudo aponta junto, a vol efetiva sobe</div>
+          </div>
+        </div>
+
+        <!-- Hard stop -->
+        <div class="framework-card">
+          <div class="framework-num">10%</div>
+          <div class="framework-label">Hard Stop de Drawdown</div>
+          <div class="framework-desc">A Legacy tem uma regra simples mas inegociável: qualquer estratégia que atingir ~10% de drawdown é zerada. O gestor volta com metade do limite. A filosofia é manter o gestor "oxigenado" — drawdown tira do jogo mais do que P&L negativo.</div>
+          <div style="margin-top:14px;padding:10px 12px;background:#fee2e2;border-radius:6px;font-size:11px;color:var(--red)">
+            <strong>Regra:</strong> Bateu o stop → zera tudo → volta com 50% do limite. Sem exceções, salvo eventos extraordinários previamente definidos pelo comitê.
+          </div>
+        </div>
+
+        <!-- Correlação -->
+        <div class="framework-card">
+          <div class="framework-num">ρ</div>
+          <div class="framework-label">Correlação Agregada</div>
+          <div class="framework-desc">O risco mais traiçoeiro é a correlação oculta: posições aparentemente diversificadas que se movem juntas em momentos de stress. REMX, URNM, CPER e IAU podem parecer independentes, mas em risk-off global todos caem ao mesmo tempo.</div>
+          <div style="margin-top:14px;font-size:12px;color:var(--g600);line-height:1.7">
+            <div>· Correlação &gt; 0,7 → <span style="color:var(--red)">concentração oculta</span></div>
+            <div>· Correlação 0,3–0,7 → <span style="color:var(--amber)">monitorar</span></div>
+            <div>· Correlação &lt; 0,3 → <span style="color:var(--green)">diversificado</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:6px;padding:12px 16px;background:#f8f8f8;border-radius:8px;font-size:11px;color:var(--g400);line-height:1.6">
+        Framework baseado em notas da reunião com Felipe Guerra (CIO) e Roberto Prado (Macro Offshore) da Legacy Capital — Núcleo de Finanças Insper, set/2026.
+      </div>
+    </div>
+
     <!-- SCORECARD -->
     <div id="page-scorecard" class="page">
       <div class="sec-title">Scorecard do fundo</div>
@@ -1048,6 +1170,20 @@ document.addEventListener('DOMContentLoaded',function(){
     <label class="form-label">Tese</label><textarea id="t-tese" style="min-height:90px" placeholder="Descreva a tese, catalisadores e prazo..."></textarea>
     <label class="form-label">Risco principal</label><input type="text" id="t-risco" placeholder="Ex: Queda no preço do urânio...">
     <label class="form-label">Stop / condição de saída</label><input type="text" id="t-stop" placeholder="Ex: Sair se cair 15% ou tese mudar">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label class="form-label">Convicção</label>
+        <select id="t-convicao">
+          <option value="1">1 — Baixa (½ tamanho)</option>
+          <option value="2" selected>2 — Padrão</option>
+          <option value="3">3 — Alta (1,5× tamanho)</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Stop de drawdown (%)</label>
+        <input type="number" id="t-stop-pct" placeholder="Ex: 15" step="1" min="1" max="50">
+      </div>
+    </div>
     <label class="form-label">Status</label>
     <select id="t-status"><option value="ativa">Ativa</option><option value="revisao">Em revisão</option><option value="encerrada">Encerrada</option></select>
     <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-tese')">Cancelar</button><button class="btn btn-primary" onclick="salvarTese()">Salvar</button></div>
@@ -1374,22 +1510,21 @@ function updateChartsFromAPI(cotas, metricas) {
 
 // ── DADOS ──
 const CARTEIRA = [
-  {a:"LFT 2031",   t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true},
-  {a:"NTN-B 2029", t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true},
-  {a:"NTN-B 2035", t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true},
-  {a:"STIP",       t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true},
-  {a:"IAU",        t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true},
-  {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true},
-  {a:"BOVA11",     t:"Ação BR",  p:0.050, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true},
-  {a:"UTLL11",     t:"Ação BR",  p:0.040, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true},
-  {a:"CURY3",      t:"Ação BR",  p:0.030, k:"CURY3 BZ Equity",  cls:"Ações BR",      long:true},
-  {a:"RAIL3",      t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true},
-  {a:"CPER",       t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true},
-  {a:"CORN",       t:"ETF USD",  p:0.025, k:"CORN US Equity",   cls:"Commodities",   long:true},
-  {a:"CANE",       t:"ETF USD",  p:0.020, k:"CANE US Equity",   cls:"Commodities",   long:true},
-  {a:"URNM",       t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true},
-  {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true},
-  {a:"Bitcoin",    t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true},
+  {a:"LFT 2031",   t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true,  vol_anual:0.003, convicao:2},
+  {a:"NTN-B 2029", t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true,  vol_anual:0.045, convicao:2},
+  {a:"NTN-B 2035", t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true,  vol_anual:0.060, convicao:2},
+  {a:"STIP",       t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true,  vol_anual:0.040, convicao:2},
+  {a:"IAU",        t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true,  vol_anual:0.140, convicao:3},
+  {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true,  vol_anual:0.160, convicao:2},
+  {a:"BOVA11",     t:"Ação BR",  p:0.050, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.220, convicao:2},
+  {a:"UTLL11",     t:"Ação BR",  p:0.040, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.180, convicao:2},
+  {a:"CURY3",      t:"Ação BR",  p:0.030, k:"CURY3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.350, convicao:2},
+  {a:"RAIL3",      t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.280, convicao:1},
+  {a:"CPER",       t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true,  vol_anual:0.280, convicao:2},
+  {a:"CORN",       t:"ETF USD",  p:0.025, k:"CORN US Equity",   cls:"Commodities",   long:true,  vol_anual:0.200, convicao:2},
+  {a:"URNM",       t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.450, convicao:3},
+  {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.400, convicao:3},
+  {a:"Bitcoin",    t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true,  vol_anual:0.700, convicao:1},
 ];
 
 // Direção esperada da tese para derivativos
@@ -1515,7 +1650,7 @@ function updateBadges(){
 }
 
 // ── NAV ──
-const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',macrodata:'Dados Macro — Últimas Divulgações',scorecard:'Scorecard do Fundo',analise:'Análise por Período',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
+const TITLES={dashboard:'Dashboard',carteira:'Carteira',performance:'Performance',comite:'Comitê Semanal',teses:'Teses de Investimento',carta:'Carta do Gestor',simulador:'Simulador de Rebalance',calendario:'Calendário Macro',macrodata:'Dados Macro — Últimas Divulgações',scorecard:'Scorecard do Fundo',risco:'Gestão de Risco — Framework Legacy',analise:'Análise por Período',trainees:'Trainees',onboarding:'Manual do Membro',faq:'FAQ — Manual',precos:'Preços Manuais'};
 function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1956,20 +2091,54 @@ function renderTeses(){
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">💡</div><p>Nenhuma tese encontrada.</p></div>';return;}
   const pm={ativa:'pill-green',revisao:'pill-amber',encerrada:'pill-white'};
   const lm={ativa:'Ativa',revisao:'Em revisão',encerrada:'Encerrada'};
-  el.innerHTML=lista.map(t=>{const ri=teses.indexOf(t);return`
+  const convLabel={1:'Convicção 1 — Baixa',2:'Convicção 2 — Padrão',3:'Convicção 3 — Alta'};
+  const convCls={1:'conv-1',2:'conv-2',3:'conv-3'};
+  el.innerHTML=lista.map(t=>{
+    const ri=teses.indexOf(t);
+    const conv=t.convicao||2;
+    const stopAcionado = t.stop_pct && t.preco_entrada; // futuro: calcular P&L real
+    return`
     <div class="tese-card" onclick="verTese(${ri})">
-      <div class="tese-hdr"><div><div class="tese-ativo">${t.ativo}</div><div class="tese-autor">por ${t.autor} · ${t.data}</div></div><span class="pill ${pm[t.status]}">${lm[t.status]}</span></div>
+      <div class="tese-hdr">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="conv-badge ${convCls[conv]}">${conv}</span>
+          <div>
+            <div class="tese-ativo">${t.ativo}</div>
+            <div class="tese-autor">por ${t.autor} · ${t.data}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:10px;color:var(--g400)">${convLabel[conv]}</span>
+          <span class="pill ${pm[t.status]}">${lm[t.status]}</span>
+        </div>
+      </div>
       <div class="tese-texto">${t.tese}</div>
-      ${t.stop?`<div class="tese-stop">Stop: ${t.stop}</div>`:''}
-    </div>`;}).join('');
+      <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap">
+        ${t.stop?`<div class="tese-stop">Stop: ${t.stop}</div>`:''}
+        ${t.stop_pct?`<div style="font-size:11px;color:var(--red);background:#fee2e2;padding:2px 8px;border-radius:20px">Hard stop: −${t.stop_pct}%</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function salvarTese(){
-  const t={ativo:document.getElementById('t-ativo').value.trim(),autor:document.getElementById('t-autor').value.trim(),tese:document.getElementById('t-tese').value.trim(),risco:document.getElementById('t-risco').value.trim(),stop:document.getElementById('t-stop').value.trim(),status:document.getElementById('t-status').value,data:new Date().toLocaleDateString('pt-BR')};
+  const t={
+    ativo:document.getElementById('t-ativo').value.trim(),
+    autor:document.getElementById('t-autor').value.trim(),
+    tese:document.getElementById('t-tese').value.trim(),
+    risco:document.getElementById('t-risco').value.trim(),
+    stop:document.getElementById('t-stop').value.trim(),
+    convicao:parseInt(document.getElementById('t-convicao').value)||2,
+    stop_pct:parseFloat(document.getElementById('t-stop-pct').value)||null,
+    status:document.getElementById('t-status').value,
+    data:new Date().toLocaleDateString('pt-BR'),
+    preco_entrada:null, // pode ser preenchido manualmente depois
+  };
   if(!t.ativo||!t.tese){alert('Preencha ativo e tese.');return;}
   teses.push(t);await save('pf_teses',teses);
   closeModal('modal-tese');
-  ['t-ativo','t-autor','t-tese','t-risco','t-stop'].forEach(id=>document.getElementById(id).value='');
+  ['t-ativo','t-autor','t-tese','t-risco','t-stop','t-stop-pct'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('t-convicao').value='2';
   renderTeses();updateBadges();
 }
 
@@ -2407,6 +2576,7 @@ async function loadAtribuicao(mes) {
 
   const label = MESES_LABELS[mes] || mes;
   title.textContent = 'Atribuição — ' + label;
+  _atribMesAtual = mes;
 
   try {
     const data = await apiFetch('/api/atribuicao?mes=' + mes);
@@ -2460,6 +2630,13 @@ async function loadAtribuicao(mes) {
 
   } catch(e) {
     body.innerHTML = '<div style="padding:16px;text-align:center;color:var(--red);font-size:12px">Erro ao buscar atribuição: ' + e.message + '</div>';
+  } finally {
+    // Atualiza estado dos botões de navegação
+    const idx = MESES_DISPONIVEIS.indexOf(mes);
+    const prev = document.getElementById('atrib-prev');
+    const next = document.getElementById('atrib-next');
+    if (prev) prev.disabled = idx <= 0;
+    if (next) next.disabled = idx >= MESES_DISPONIVEIS.length - 1;
   }
 }
 
@@ -2606,4 +2783,20 @@ setInterval(function(){
 </script>
 </div><!-- /app-root -->
 </body>
-</html>
+</html// ── NAVEGAÇÃO DA ATRIBUIÇÃO ──
+let _atribMesAtual = null;
+const MESES_DISPONIVEIS = [
+  '2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
+  '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10',
+];
+
+function navAtribuicao(delta) {
+  if (!_atribMesAtual) return;
+  const idx = MESES_DISPONIVEIS.indexOf(_atribMesAtual);
+  if (idx < 0) return;
+  const novoIdx = idx + delta;
+  if (novoIdx < 0 || novoIdx >= MESES_DISPONIVEIS.length) return;
+  loadAtribuicao(MESES_DISPONIVEIS[novoIdx]);
+}
+
+>
