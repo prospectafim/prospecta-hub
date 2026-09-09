@@ -1663,6 +1663,7 @@ function showPage(id,el){
   if(id==='carteira') setTimeout(loadPesosReais,200);
   if(id==='carteira') setTimeout(loadPesosReais,300);
   if(id==='macrodata') setTimeout(loadMacroData,100);
+  if(id==='risco') setTimeout(renderRiscoPage,100);
   if(id==='analise'){ const d=new Date(); document.getElementById('ap-fim').value=d.toISOString().split('T')[0]; const s=new Date(d.getFullYear(),d.getMonth(),1); document.getElementById('ap-inicio').value=s.toISOString().split('T')[0]; }
   if(id==='scorecard') setTimeout(loadFromAPI,100);
   if(id==='scorecard') setTimeout(initScoreChart,100);
@@ -2638,6 +2639,104 @@ async function loadAtribuicao(mes) {
     if (prev) prev.disabled = idx <= 0;
     if (next) next.disabled = idx >= MESES_DISPONIVEIS.length - 1;
   }
+}
+
+// ── NAVEGAÇÃO DA ATRIBUIÇÃO ──
+let _atribMesAtual = null;
+const MESES_DISPONIVEIS = [
+  '2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
+  '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10',
+];
+function navAtribuicao(delta){
+  if(!_atribMesAtual)return;
+  const idx=MESES_DISPONIVEIS.indexOf(_atribMesAtual);
+  if(idx<0)return;
+  const ni=idx+delta;
+  if(ni<0||ni>=MESES_DISPONIVEIS.length)return;
+  loadAtribuicao(MESES_DISPONIVEIS[ni]);
+}
+
+// ── GESTÃO DE RISCO — Framework Legacy ──
+const AREA_PM={
+  'RF Brasil':    {pm:'Ishimura',cor:'#0A0A0A'},
+  'RF Global':    {pm:'Ishimura',cor:'#3A3A3A'},
+  'Ações BR':     {pm:'Bruno',   cor:'#1E3A8A'},
+  'Ações Globais':{pm:'Bruno',   cor:'#2563EB'},
+  'Commodities':  {pm:'Henrique',cor:'#92400E'},
+  'Cripto':       {pm:'Henrique',cor:'#C9A84C'},
+};
+const CORR={
+  'RF Brasil':    {'RF Brasil':1.0,'RF Global':0.3,'Ações BR':0.2,'Ações Globais':0.1,'Commodities':0.1,'Cripto':0.0},
+  'RF Global':    {'RF Brasil':0.3,'RF Global':1.0,'Ações BR':0.1,'Ações Globais':0.6,'Commodities':0.3,'Cripto':0.1},
+  'Ações BR':     {'RF Brasil':0.2,'RF Global':0.1,'Ações BR':1.0,'Ações Globais':0.5,'Commodities':0.4,'Cripto':0.3},
+  'Ações Globais':{'RF Brasil':0.1,'RF Global':0.6,'Ações BR':0.5,'Ações Globais':1.0,'Commodities':0.6,'Cripto':0.5},
+  'Commodities':  {'RF Brasil':0.1,'RF Global':0.3,'Ações BR':0.4,'Ações Globais':0.6,'Commodities':1.0,'Cripto':0.4},
+  'Cripto':       {'RF Brasil':0.0,'RF Global':0.1,'Ações BR':0.3,'Ações Globais':0.5,'Commodities':0.4,'Cripto':1.0},
+};
+
+function calcularVaRArea(){
+  const Z=1.645;
+  const areas={};
+  CARTEIRA.forEach(a=>{
+    if(!areas[a.cls])areas[a.cls]={peso:0,var_contrib:0,ativos:[]};
+    const vol_d=(a.vol_anual||0.10)/Math.sqrt(252);
+    areas[a.cls].peso+=a.p;
+    areas[a.cls].var_contrib+=a.p*vol_d*Z;
+    areas[a.cls].ativos.push(a.a);
+  });
+  const var_total=Object.values(areas).reduce((s,a)=>s+a.var_contrib,0);
+  const el=document.getElementById('var-areas');
+  const maxV=Math.max(...Object.values(areas).map(a=>a.var_contrib));
+  if(el) el.innerHTML=Object.entries(areas).map(([nome,dados])=>{
+    const pm=AREA_PM[nome]||{pm:'—',cor:'#999'};
+    const varPct=(dados.var_contrib*100).toFixed(3);
+    const w=maxV>0?(dados.var_contrib/maxV*100).toFixed(0):0;
+    return`<div class="var-area-card"><div class="var-area-title"><span>${nome} <span style="font-size:10px;color:var(--g400);font-weight:400">· ${pm.pm}</span></span><span style="font-family:var(--serif);font-size:15px;color:var(--red)">−${varPct}%</span></div><div style="font-size:10px;color:var(--g400);margin-bottom:4px">Peso ${(dados.peso*100).toFixed(1)}%</div><div class="var-bar"><div class="var-bar-fill" style="width:${w}%;background:${pm.cor}"></div></div></div>`;
+  }).join('');
+  const elT=document.getElementById('var-total');
+  if(elT)elT.textContent='−'+(var_total*100).toFixed(3)+'%';
+}
+
+function renderMapaConvicao(){
+  const el=document.getElementById('mapa-convicao');
+  if(!el)return;
+  const lbl={1:'Baixa',2:'Padrão',3:'Alta'};
+  el.innerHTML=[...CARTEIRA].sort((a,b)=>(b.convicao||2)-(a.convicao||2)).map(a=>{
+    const c=a.convicao||2;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--g100)"><span class="conv-badge conv-${c}">${c}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;font-family:var(--serif)">${a.a}</div><div style="font-size:10px;color:var(--g400)">${a.cls} · vol ~${((a.vol_anual||0.10)*100).toFixed(0)}%/ano</div></div><div style="text-align:right"><div style="font-size:11px;font-weight:600">${(a.p*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--g400)">${lbl[c]}</div></div></div>`;
+  }).join('');
+}
+
+function renderMatrizCorr(){
+  const el=document.getElementById('matriz-corr');
+  if(!el)return;
+  const classes=Object.keys(CORR);
+  const pesosCls={};
+  CARTEIRA.forEach(a=>{ pesosCls[a.cls]=(pesosCls[a.cls]||0)+a.p; });
+  const corrColor=v=>v>=0.7?'#fee2e2':v>=0.3?'#fffbeb':'#f0fdf4';
+  const corrText=v=>v>=0.7?'var(--red)':v>=0.3?'var(--amber)':'var(--green)';
+  const short={'RF Brasil':'RF BR','RF Global':'RF GL','Ações BR':'Aç BR','Ações Globais':'Aç GL','Commodities':'Commod','Cripto':'Cripto'};
+  let h=`<div style="display:grid;grid-template-columns:110px ${classes.map(()=>'1fr').join(' ')};gap:2px;align-items:center">`;
+  h+='<div></div>';
+  classes.forEach(c=>{h+=`<div style="font-size:9px;color:var(--g400);text-align:center;padding:2px;line-height:1.2">${short[c]||c}</div>`;});
+  classes.forEach(row=>{
+    const peso=((pesosCls[row]||0)*100).toFixed(0);
+    h+=`<div style="font-size:10px;font-weight:600;padding:2px 0;line-height:1.3">${short[row]||row}<br><span style="font-size:9px;color:var(--g400);font-weight:400">${peso}%</span></div>`;
+    classes.forEach(col=>{
+      const v=CORR[row][col];
+      const diag=row===col;
+      h+=`<div class="corr-cell" style="background:${diag?'#0A0A0A':corrColor(v)};color:${diag?'#fff':corrText(v)}" title="${row} × ${col}: ${v}">${diag?'—':v.toFixed(1)}</div>`;
+    });
+  });
+  h+='</div>';
+  h+='<div style="margin-top:8px;font-size:10px;color:var(--g400)">Correlações estimadas entre classes. Em stress de mercado, tendem a subir para 0,7–0,9.</div>';
+  el.innerHTML=h;
+}
+
+function renderRiscoPage(){
+  calcularVaRArea();
+  renderMapaConvicao();
+  renderMatrizCorr();
 }
 
 // ── ANÁLISE POR PERÍODO ──
