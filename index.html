@@ -476,6 +476,7 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="card-hdr"><div class="card-title">Derivativos ativos</div></div>
           <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">8,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">USD/BRL</div><div class="deriv-meta">Entrada 16/09/2026 · hedge eleitoral</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">8,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">5s10s IRS Steepener (USD)</div><div class="deriv-meta">Entrada 16/09/2026 · 5Y@4,79% / 10Y@4,94% · spread 15bps → alvo 35bps · stop 5bps</div></div><div class="deriv-right"><span class="pill pill-green">Steepener</span><div class="deriv-notional">12,6%</div></div></div>
 
 
@@ -517,6 +518,9 @@ document.addEventListener('DOMContentLoaded',function(){
           <button class="btn btn-secondary btn-sm" onclick="loadPesosReais()">↻ Atualizar pesos</button>
         </div>
       </div>
+        <!-- Resumo por classe e caixa -->
+        <div id="cart-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px"></div>
+
         <!-- Banner alertas drift -->
         <div class="drift-banner" id="drift-banner">
           <span style="font-size:18px;flex-shrink:0">⚠️</span>
@@ -1465,6 +1469,8 @@ function updateChartsFromAPI(cotas, metricas) {
   // Barras mensais
   const ctxM = document.getElementById('chart-mensal');
   if (ctxM) {
+    if (ctxM._chart) { ctxM._chart.destroy(); ctxM._chart = null; }
+    if (!monthlyKeys.length) { console.warn('No monthly data'); }
     ctxM._chart = new Chart(ctxM, {type:'bar', data:{
       labels: monthlyKeys.map(k => k.substring(0,7)),
       datasets: [
@@ -1511,22 +1517,22 @@ const CARTEIRA = [
   {a:"STIP",       t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true,  vol_anual:0.040, convicao:2},
   {a:"IAU",        t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true,  vol_anual:0.140, convicao:3},
   {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true,  vol_anual:0.160, convicao:2},
-  {a:"BOVA11",     t:"Ação BR",  p:0.050, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.220, convicao:2},
-  {a:"UTLL11",     t:"Ação BR",  p:0.040, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.180, convicao:2},
+  {a:"BOVA11",     t:"Ação BR",  p:0.080, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.220, convicao:3},
+  {a:"UTLL11",     t:"Ação BR",  p:0.020, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.180, convicao:2},
   {a:"CURY3",      t:"Ação BR",  p:0.030, k:"CURY3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.350, convicao:2},
   {a:"RAIL3",      t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.280, convicao:1},
   {a:"CPER",       t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true,  vol_anual:0.280, convicao:2},
   {a:"CANE",       t:"ETF USD",  p:0.020, k:"CANE US Equity",   cls:"Commodities",   long:true,  vol_anual:0.280, convicao:2},
-  {a:"URNM",       t:"ETF USD",  p:0.020, k:"URNM US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.450, convicao:3},
-  {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.400, convicao:3},
+  {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.400, convicao:2},
   {a:"Bitcoin",    t:"Cripto",   p:0.010, k:"XBT Curncy",       cls:"Cripto",        long:true,  vol_anual:0.700, convicao:1},
 ];
 
 // Direção esperada da tese para derivativos
 const DERIV_TESE = {
-  "EUR/BRL":  {long:false, descr:"Vendido — espera real forte vs euro"},
-  "MXN/CAD":  {long:true,  descr:"Comprado — espera peso mexicano forte"},
-  "DI1F31":   {long:false, descr:"Vendido — tese de fechamento de 50bps (subposicionamento em RF + momentum Flávio)"},
+  "EUR/BRL":             {long:false, descr:"Vendido — espera real forte vs euro"},
+  "MXN/CAD":             {long:true,  descr:"Comprado — espera peso mexicano forte"},
+  "USD/BRL Long":        {long:true,  descr:"Comprado — hedge eleitoral contra vitória Lula"},
+  "5s10s IRS Steepener": {long:true,  descr:"Steepener — spread 10Y-5Y abre de 15bps para 35bps"},
 };
 
 const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
@@ -1663,6 +1669,41 @@ function showPage(id,el){
   if(id==='scorecard') setTimeout(loadFromAPI,100);
   if(id==='scorecard') setTimeout(initScoreChart,100);
   if(id==='simulador') setTimeout(initSimulador,100);
+}
+
+// ── RESUMO CARTEIRA POR CLASSE ──
+function renderCarteiraSummary() {
+  const el = document.getElementById('cart-summary');
+  if (!el) return;
+
+  // Agrupa por classe
+  const classes = {};
+  CARTEIRA.forEach(a => {
+    classes[a.cls] = (classes[a.cls] || 0) + a.p;
+  });
+
+  const total = CARTEIRA.reduce((s, a) => s + a.p, 0);
+  const caixa = Math.max(0, 1 - total);
+
+  const CLS_ICON = {
+    'RF Brasil':     '🇧🇷',
+    'RF Global':     '🌐',
+    'Ações BR':      '📈',
+    'Ações Globais': '🌎',
+    'Commodities':   '🏅',
+    'Cripto':        '₿',
+  };
+
+  const cards = [...Object.entries(classes), ['Caixa', caixa]];
+
+  el.innerHTML = cards.map(([cls, pct]) => {
+    const icon = CLS_ICON[cls] || '💵';
+    const cor = cls === 'Caixa' ? 'var(--g400)' : 'var(--black)';
+    return `<div style="background:#fff;border:1px solid var(--g100);border-radius:8px;padding:10px 12px">
+      <div style="font-size:10px;color:var(--g400);margin-bottom:4px">${icon} ${cls}</div>
+      <div style="font-family:var(--serif);font-size:18px;font-weight:700;color:${cor}">${(pct*100).toFixed(1)}%</div>
+    </div>`;
+  }).join('');
 }
 
 // ── CARTEIRA ──
