@@ -488,9 +488,9 @@ document.addEventListener('DOMContentLoaded',function(){
             <tr><td style="font-family:var(--serif);font-weight:700">LFT 2031</td><td><span class="pill pill-white">Tesouro</span></td><td>24,0%</td></tr>
             <tr><td style="font-family:var(--serif);font-weight:700">NTN-B 2029</td><td><span class="pill pill-white">Tesouro</span></td><td>19,5%</td></tr>
             <tr><td style="font-family:var(--serif);font-weight:700">NTN-B 2035</td><td><span class="pill pill-white">Tesouro</span></td><td>14,5%</td></tr>
-            <tr><td style="font-family:var(--serif);font-weight:700">STIP</td><td><span class="pill pill-white">ETF USD</span></td><td>7,0%</td></tr>
-            <tr><td style="font-family:var(--serif);font-weight:700">IAU</td><td><span class="pill pill-white">ETF USD</span></td><td>5,0%</td></tr>
-            <tr><td colspan="3" style="text-align:center;font-size:11px;color:var(--g400);cursor:pointer" onclick="showPage('carteira',null)">+ 12 ativos — ver carteira completa →</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">STIP</td><td><span class="pill pill-white">ETF USD</span></td><td>4,0%</td></tr>
+            <tr><td style="font-family:var(--serif);font-weight:700">IAU</td><td><span class="pill pill-white">ETF USD</span></td><td>3,0%</td></tr>
+            <tr><td colspan="3" style="text-align:center;font-size:11px;color:var(--g400);cursor:pointer" onclick="showPage('carteira',null)">+ 14 ativos — ver carteira completa →</td></tr>
           </tbody></table>
         </div>
         <div class="card" style="margin-bottom:0">
@@ -1534,10 +1534,12 @@ const CARTEIRA = [
   {a:"LFT 2031",   t:"Tesouro",  p:0.240, k:"LFT 2031",         cls:"RF Brasil",     long:true,  vol_anual:0.003, convicao:2},
   {a:"NTN-B 2029", t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true,  vol_anual:0.045, convicao:2},
   {a:"NTN-B 2035", t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true,  vol_anual:0.060, convicao:2},
-  {a:"STIP",       t:"ETF USD",  p:0.070, k:"STIP US Equity",   cls:"RF Global",     long:true,  vol_anual:0.040, convicao:2},
-  {a:"IAU",        t:"ETF USD",  p:0.050, k:"IAU US Equity",    cls:"Commodities",   long:true,  vol_anual:0.140, convicao:3},
+  {a:"STIP",       t:"ETF USD",  p:0.040, k:"STIP US Equity",   cls:"RF Global",     long:true,  vol_anual:0.040, convicao:2},
+  {a:"IAU",        t:"ETF USD",  p:0.030, k:"IAU US Equity",    cls:"Commodities",   long:true,  vol_anual:0.140, convicao:3},
   {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true,  vol_anual:0.160, convicao:2},
   {a:"BOVA11",     t:"Ação BR",  p:0.080, k:"BOVA11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.220, convicao:3},
+  {a:"ITUB4",      t:"Ação BR",  p:0.030, k:"ITUB4 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.300, convicao:2},
+  {a:"SMAL11",     t:"Ação BR",  p:0.025, k:"SMAL11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.250, convicao:2},
   {a:"UTLL11",     t:"Ação BR",  p:0.020, k:"UTLL11 BZ Equity", cls:"Ações BR",      long:true,  vol_anual:0.180, convicao:2},
   {a:"CURY3",      t:"Ação BR",  p:0.030, k:"CURY3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.350, convicao:2},
   {a:"RAIL3",      t:"Ação BR",  p:0.020, k:"RAIL3 BZ Equity",  cls:"Ações BR",      long:true,  vol_anual:0.280, convicao:1},
