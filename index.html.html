@@ -476,7 +476,9 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="card-hdr"><div class="card-title">Derivativos ativos</div></div>
           <div class="deriv-row"><div><div class="deriv-name">EUR/BRL</div><div class="deriv-meta">Entrada 24/04/2026 · realização parcial 06/10 @ 5,5885 (+0,19% PL)</div></div><div class="deriv-right"><span class="pill pill-red">Vendido</span><div class="deriv-notional">4,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">USD/BRL Long</div><div class="deriv-meta">Entrada 26/10/2026 @ 5,4100 · hedge pós-eleição Lula</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">20,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">5s10s IRS Steepener</div><div class="deriv-meta">Entrada 16/09/2026 · Rec 5Y USD 9,5M @ 4,79% / Pag 10Y USD 5M @ 4,94% · spread 15→35bps</div></div><div class="deriv-right"><span class="pill pill-green">Steepener</span><div class="deriv-notional">12,6%</div></div></div>
+          <div class="deriv-row"><div><div class="deriv-name">DI Steepener jan28/jan31</div><div class="deriv-meta">Entrada 26/10/2026 · V 123 DI1F28 @ 14,875% / C 55 DI1F31 @ 15,220% · aposta inclinação da curva</div></div><div class="deriv-right"><span class="pill pill-green">Steepener</span><div class="deriv-notional">2,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">IBOVL210/220 Bull Spread</div><div class="deriv-meta">Entrada 02/10/2026 · C 2000 IBOVL210 @ 3830 / V 2000 IBOVL220 @ 1735 · venc. dez/26</div></div><div class="deriv-right"><span class="pill pill-green">Spread de Compra</span><div class="deriv-notional">0,36%</div></div></div>
 
         </div>
@@ -543,12 +545,12 @@ document.addEventListener('DOMContentLoaded',function(){
         <tbody>
           <tr><td style="font-family:var(--serif);font-weight:700">EUR/BRL</td><td><span class="pill pill-red">Vendido</span></td><td style="font-family:var(--serif);font-weight:700">4,0%</td><td>24/04/2026</td><td style="color:var(--g400)">EUR BRL Curncy · Entrada 5,8660 · realização parcial 06/10 @ 5,5885 (4% → fechado, P&amp;L +R$22.142 / +0,19% PL) · 4% residual ativo</td></tr>
           <tr><td style="font-family:var(--serif);font-weight:700">MXN/CAD</td><td><span class="pill pill-green">Comprado</span></td><td style="font-family:var(--serif);font-weight:700">3,0%</td><td>27/04/2026</td><td style="color:var(--g400)">MXN CAD Curncy</td></tr>
-            <tr style="opacity:0.45">
-              <td style="font-family:var(--serif);font-weight:700;text-decoration:line-through">USD/BRL</td>
-              <td><span class="pill pill-white">Encerrado</span></td>
-              <td style="font-family:var(--serif);font-weight:700">—</td>
-              <td>16/09 → 05/10/2026</td>
-              <td style="color:var(--g400)">Entrada 5,1510 · Saída 5,2173 · P&L +R$12.048 (+0,10% PL)</td>
+            <tr>
+              <td style="font-family:var(--serif);font-weight:700">USD/BRL Long</td>
+              <td><span class="pill pill-green">Comprado</span></td>
+              <td style="font-family:var(--serif);font-weight:700">20,0%</td>
+              <td>26/10/2026</td>
+              <td style="color:var(--g400)">Entrada 5,4100 · hedge pós-eleição Lula · posição aberta</td>
             </tr>
             <tr>
               <td style="font-family:var(--serif);font-weight:700">5s10s IRS Steepener</td>
@@ -563,6 +565,13 @@ document.addEventListener('DOMContentLoaded',function(){
               <td style="font-family:var(--serif);font-weight:700">0,36% prêmio</td>
               <td>02/10/2026 · venc. dez/26</td>
               <td style="color:var(--g400)">C 2000 IBOVL210 @ 3830 / V 2000 IBOVL220 @ 1735 · custo liq R$41.900 · max gain R$158.100 (1,35% PL) · BE IBOV 212.095 · risco eleitoral</td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--serif);font-weight:700">DI Steepener jan28/jan31</td>
+              <td><span class="pill pill-green">Steepener</span></td>
+              <td style="font-family:var(--serif);font-weight:700">2,0%</td>
+              <td>26/10/2026</td>
+              <td style="color:var(--g400)">V 123 DI1F28 @ 14,875% / C 55 DI1F31 @ 15,220% · spread entrada: 34,5bps · tese: fiscal Lula inclina curva DI no longo</td>
             </tr>
 
 
@@ -1549,6 +1558,7 @@ const DERIV_TESE = {
   "MXN/CAD":             {long:true,  descr:"Comprado — espera peso mexicano forte"},
   "USD/BRL Long":        {long:true,  descr:"Comprado — hedge eleitoral pós-vitória Lula (ampliado 8%→20% em 26/out)"},
   "5s10s IRS Steepener": {long:true,  descr:"Steepener — spread 10Y-5Y abre de 15bps para 35bps"},
+  "DI Steepener jan28/jan31": {long:true, descr:"Steepener DI — fiscal Lula pressiona longo, spread jan31-jan28 abre"},
 };
 
 const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
