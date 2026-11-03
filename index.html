@@ -478,7 +478,6 @@ document.addEventListener('DOMContentLoaded',function(){
           <div class="deriv-row"><div><div class="deriv-name">MXN/CAD</div><div class="deriv-meta">Entrada 27/04/2026</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">3,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">USD/BRL Long</div><div class="deriv-meta">Entrada 26/10/2026 @ 5,4100 · hedge pós-eleição Lula</div></div><div class="deriv-right"><span class="pill pill-green">Comprado</span><div class="deriv-notional">20,0%</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">5s10s IRS Steepener</div><div class="deriv-meta">Entrada 16/09/2026 · Rec 5Y USD 9,5M @ 4,79% / Pag 10Y USD 5M @ 4,94% · spread 15→35bps</div></div><div class="deriv-right"><span class="pill pill-green">Steepener</span><div class="deriv-notional">12,6%</div></div></div>
-          <div class="deriv-row" style="opacity:0.45"><div><div class="deriv-name" style="text-decoration:line-through">DI Steepener jan28/jan31</div><div class="deriv-meta">Encerrado 02/11/2026 · entrada 26/10 spread 34,5bps → saída 73,0bps · +38,5bps ganhos · tese confirmada</div></div><div class="deriv-right"><span class="pill" style="background:#f0f0f0;color:#9a9a9a">Encerrado</span><div class="deriv-notional" style="color:#16a34a">+38,5bps</div></div></div>
           <div class="deriv-row"><div><div class="deriv-name">IBOVL210/220 Bull Spread</div><div class="deriv-meta">Entrada 02/10/2026 · C 2000 IBOVL210 @ 3830 / V 2000 IBOVL220 @ 1735 · venc. dez/26</div></div><div class="deriv-right"><span class="pill pill-green">Spread de Compra</span><div class="deriv-notional">0,36%</div></div></div>
 
         </div>
@@ -565,13 +564,6 @@ document.addEventListener('DOMContentLoaded',function(){
               <td style="font-family:var(--serif);font-weight:700">0,36% prêmio</td>
               <td>02/10/2026 · venc. dez/26</td>
               <td style="color:var(--g400)">C 2000 IBOVL210 @ 3830 / V 2000 IBOVL220 @ 1735 · custo liq R$41.900 · max gain R$158.100 (1,35% PL) · BE IBOV 212.095 · risco eleitoral</td>
-            </tr>
-            <tr style="opacity:0.45">
-              <td style="font-family:var(--serif);font-weight:700;text-decoration:line-through">DI Steepener jan28/jan31</td>
-              <td><span class="pill" style="background:#f0f0f0;color:#9a9a9a">Encerrado</span></td>
-              <td style="font-family:var(--serif);font-weight:700;color:#16a34a">+38,5bps</td>
-              <td>26/10 → 02/11/2026</td>
-              <td style="color:var(--g400)">V 123 DI1F28 @ 14,875% → C @ 14,465% / C 55 DI1F31 @ 15,220% → V @ 15,195% · spread 34,5→73,0bps · +38,5bps ganhos · tese confirmada: fiscal Lula inclinou curva DI no longo</td>
             </tr>
 
 
@@ -1540,12 +1532,13 @@ function updateChartsFromAPI(cotas, metricas) {
 
 // ── DADOS ──
 const CARTEIRA = [
-  {a:"LFT 2031",   t:"Tesouro",  p:0.485, k:"LFT 2031",         cls:"RF Brasil",     long:true,  vol_anual:0.003, convicao:3},
+  {a:"LFT 2031",   t:"Tesouro",  p:0.420, k:"LFT 2031",         cls:"RF Brasil",     long:true,  vol_anual:0.003, convicao:3},
   {a:"NTN-B 2029", t:"Tesouro",  p:0.195, k:"NTNB 2029",        cls:"RF Brasil",     long:true,  vol_anual:0.045, convicao:2},
   {a:"NTN-B 2035", t:"Tesouro",  p:0.145, k:"NTNB 2035",        cls:"RF Brasil",     long:true,  vol_anual:0.060, convicao:2},
+  {a:"IVV",        t:"ETF USD",  p:0.075, k:"IVV US Equity",    cls:"Ações Globais", long:true,  vol_anual:0.160, convicao:2},
+  {a:"AVGO",       t:"Ação USD", p:0.030, k:"AVGO US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.300, convicao:2},
   {a:"STIP",       t:"ETF USD",  p:0.030, k:"STIP US Equity",   cls:"RF Global",     long:true,  vol_anual:0.040, convicao:2},
   {a:"IAU",        t:"ETF USD",  p:0.030, k:"IAU US Equity",    cls:"Commodities",   long:true,  vol_anual:0.140, convicao:3},
-  {a:"IVV",        t:"ETF USD",  p:0.040, k:"IVV US Equity",    cls:"Ações Globais", long:true,  vol_anual:0.160, convicao:2},
   {a:"CPER",       t:"ETF USD",  p:0.025, k:"CPER US Equity",   cls:"Commodities",   long:true,  vol_anual:0.280, convicao:2},
   {a:"CANE",       t:"ETF USD",  p:0.020, k:"CANE US Equity",   cls:"Commodities",   long:true,  vol_anual:0.280, convicao:2},
   {a:"REMX",       t:"ETF USD",  p:0.020, k:"REMX US Equity",   cls:"Ações Globais", long:true,  vol_anual:0.400, convicao:2},
@@ -1558,7 +1551,6 @@ const DERIV_TESE = {
   "MXN/CAD":             {long:true,  descr:"Comprado — espera peso mexicano forte"},
   "USD/BRL Long":        {long:true,  descr:"Comprado — hedge eleitoral pós-vitória Lula (ampliado 8%→20% em 26/out)"},
   "5s10s IRS Steepener": {long:true,  descr:"Steepener — spread 10Y-5Y abre de 15bps para 35bps"},
-  "DI Steepener jan28/jan31": {long:false, descr:"ENCERRADO 02/11 · spread 34,5→73,0bps · +38,5bps · tese confirmada"},
 };
 
 const MONTHLY_FUND = [1.8064,0.6426,0.6439,1.4234,2.7103,1.7005,1.5053,1.1805,3.7552,0.5630,-4.1489,1.8595,-0.6702];
